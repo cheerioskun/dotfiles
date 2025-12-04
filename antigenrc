@@ -1,0 +1,25 @@
+# Load oh-my-zsh library.
+antigen use oh-my-zsh
+# Load bundles from the default repo (oh-my-zsh).
+antigen bundle git
+
+antigen bundle zsh-users/zsh-completions
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-syntax-highlighting
+antigen bundle zoxide
+antigen bundle fzf
+
+
+antigen bundle bazel
+antigen bundle docker
+antigen bundle cp
+antigen bundle docker-compose
+antigen bundle kubectl
+antigen bundle azure
+antigen bundle kubectx
+
+# Select theme.
+antigen theme romkatv/powerlevel10k
+# Tell Antigen that you're done.
+
+antigen apply

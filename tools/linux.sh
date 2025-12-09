@@ -37,17 +37,25 @@ install_apt_packages() {
         git
         neovim
         jq
+        zoxide
     )
     
+    # Check which packages need to be installed
+    local packages_to_install=()
     for pkg in "${packages[@]}"; do
-        if dpkg -l "$pkg" &>/dev/null; then
-            log_info "$pkg is already installed"
+        if ! dpkg -l "$pkg" &>/dev/null; then
+            packages_to_install+=("$pkg")
         else
-            log_info "Installing $pkg..."
-            sudo apt-get install -y "$pkg"
-            log_success "$pkg installed"
+            log_info "$pkg is already installed"
         fi
     done
+    
+    # Install all missing packages at once
+    if [ ${#packages_to_install[@]} -gt 0 ]; then
+        log_info "Installing packages: ${packages_to_install[*]}..."
+        sudo apt-get install -y "${packages_to_install[@]}"
+        log_success "All packages installed"
+    fi
     
     # Create symlinks for renamed packages
     # bat is installed as batcat on Debian/Ubuntu
@@ -73,9 +81,7 @@ install_github_packages() {
     
     # lf file manager
     install_lf
-    
-    # zoxide (smarter cd)
-    install_zoxide
+
 }
 
 # Install fzf fuzzy finder

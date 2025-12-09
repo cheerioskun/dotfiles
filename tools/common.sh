@@ -15,6 +15,8 @@ install_antigen() {
         curl -L git.io/antigen > "$antigen_path"
         log_success "Antigen installed to $antigen_path"
     fi
+    # Make completions directory (bug workaround)
+    mkdir -p $HOME/.antigen/bundles/robbyrussell/oh-my-zsh/cache/completions
 }
 
 # Check if a command exists

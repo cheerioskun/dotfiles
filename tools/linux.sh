@@ -30,7 +30,6 @@ install_apt_packages() {
     
     local packages=(
         zsh
-        fzf
         ripgrep
         bat
         fd-find
@@ -69,9 +68,41 @@ install_apt_packages() {
 install_github_packages() {
     log_info "Installing packages from GitHub releases..."
     
+    # fzf fuzzy finder
+    install_fzf
+    
     # lf file manager
     install_lf
     
     # zoxide (smarter cd)
     install_zoxide
+}
+
+# Install fzf fuzzy finder
+# https://github.com/junegunn/fzf
+install_fzf() {
+    if command_exists fzf; then
+        log_info "fzf is already installed"
+        return 0
+    fi
+    
+    log_info "Installing fzf..."
+    
+    local install_dir="$HOME/.local/bin"
+    mkdir -p "$install_dir"
+    
+    local url="https://github.com/junegunn/fzf/releases/download/v0.67.0/fzf-0.67.0-linux_amd64.tar.gz"
+    
+    local tmp_dir=$(mktemp -d)
+    cd "$tmp_dir"
+    
+    curl -sL "$url" -o fzf.tar.gz
+    tar -xzf fzf.tar.gz
+    mv fzf "$install_dir/fzf"
+    chmod +x "$install_dir/fzf"
+    
+    cd - > /dev/null
+    rm -rf "$tmp_dir"
+    
+    log_success "fzf installed to $install_dir"
 }

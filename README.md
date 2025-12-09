@@ -8,7 +8,7 @@ Automatically sets up your shell environment with:
 
 - **zsh** with **antigen** plugin manager
 - **Powerlevel10k** prompt (pre-configured, no wizard)
-- Essential CLI tools: `fzf`, `ripgrep`, `bat`, `fd`, `lf`, `gum`, `zoxide`, `jq`, `neovim`
+- Essential CLI tools: `fzf`, `ripgrep`, `bat`, `fd`, `lf`, `zoxide`, `jq`, `neovim`
 - Custom aliases and functions for common tasks
 
 ## Quick Start

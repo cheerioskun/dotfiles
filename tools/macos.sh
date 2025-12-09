@@ -40,7 +40,6 @@ install_brew_packages() {
         ripgrep
         bat
         lf
-        gum
         zoxide
         fd
         neovim

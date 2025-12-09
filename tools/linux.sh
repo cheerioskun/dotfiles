@@ -72,9 +72,6 @@ install_github_packages() {
     # lf file manager
     install_lf
     
-    # gum for glamorous shell scripts
-    install_gum
-    
     # zoxide (smarter cd)
     install_zoxide
 }

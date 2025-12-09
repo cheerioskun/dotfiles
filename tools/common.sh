@@ -111,43 +111,6 @@ install_lf() {
     log_success "lf installed to $install_dir"
 }
 
-# Install gum
-# https://github.com/charmbracelet/gum
-install_gum() {
-    if command_exists gum; then
-        log_info "gum is already installed"
-        return 0
-    fi
-    
-    log_info "Installing gum..."
-    
-    local arch=$(get_arch)
-    local install_dir="$HOME/.local/bin"
-    mkdir -p "$install_dir"
-    
-    # gum includes version in filename, need to fetch latest tag
-    local version=$(curl -sL "https://api.github.com/repos/charmbracelet/gum/releases/latest" | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
-    
-    # Map arch names (gum uses x86_64 not amd64)
-    local gum_arch="x86_64"
-    [[ "$arch" == "arm64" ]] && gum_arch="arm64"
-    
-    local url="https://github.com/charmbracelet/gum/releases/download/v${version}/gum_${version}_Linux_${gum_arch}.tar.gz"
-    
-    local tmp_dir=$(mktemp -d)
-    cd "$tmp_dir"
-    
-    curl -sL "$url" -o gum.tar.gz
-    tar -xzf gum.tar.gz
-    mv gum "$install_dir/gum"
-    chmod +x "$install_dir/gum"
-    
-    cd - > /dev/null
-    rm -rf "$tmp_dir"
-    
-    log_success "gum installed to $install_dir"
-}
-
 # Install zoxide (smarter cd)
 # https://github.com/ajeetdsouza/zoxide
 install_zoxide() {

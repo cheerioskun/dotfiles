@@ -1,0 +1,119 @@
+# Shell Functions
+# Sourced from $DOTFILES_DIR/functions
+
+# =============================================================================
+# File Manager Integration
+# =============================================================================
+
+# lf - cd on exit
+# Use lf file manager and cd to the directory when exiting
+lfcd() {
+    local tmp
+    tmp="$(mktemp)"
+    lf -last-dir-path="$tmp" "$@"
+    if [[ -f "$tmp" ]]; then
+        local dir
+        dir="$(cat "$tmp")"
+        rm -f "$tmp"
+        if [[ -d "$dir" ]] && [[ "$dir" != "$(pwd)" ]]; then
+            cd "$dir"
+        fi
+    fi
+}
+
+# =============================================================================
+# Directory Operations
+# =============================================================================
+
+# Create a directory and cd into it
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# =============================================================================
+# Search & Find
+# =============================================================================
+
+# Find file by name with fzf
+ff() {
+    local file
+    file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null | fzf --height 40% --reverse --preview 'bat --style=numbers --color=always {}')
+    if [[ -n "$file" ]]; then
+        ${EDITOR:-vim} "$file"
+    fi
+}
+
+# Find directory and cd into it
+cdz() {
+    local dir
+    dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null | fzf --height 40% --reverse --preview 'ls -la {}')
+    if [[ -n "$dir" ]]; then
+        cd "$dir"
+    fi
+}
+
+# ripgrep + fzf interactive search
+# Switch between Ripgrep launcher mode (CTRL-R) and fzf filtering mode (CTRL-F)
+rgz() {
+    rm -f /tmp/rg-fzf-{r,f}
+    local RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case "
+    local INITIAL_QUERY="${*:-}"
+    fzf --ansi --disabled --query "$INITIAL_QUERY" \
+      --bind "start:reload($RG_PREFIX {q})+unbind(ctrl-r)" \
+      --bind "change:reload:sleep 0.1; $RG_PREFIX {q} || true" \
+      --bind "ctrl-f:unbind(change,ctrl-f)+change-prompt(2. fzf> )+enable-search+rebind(ctrl-r)+transform-query(echo {q} > /tmp/rg-fzf-r; cat /tmp/rg-fzf-f)" \
+      --bind "ctrl-r:unbind(ctrl-r)+change-prompt(1. ripgrep> )+disable-search+reload($RG_PREFIX {q} || true)+rebind(change,ctrl-f)+transform-query(echo {q} > /tmp/rg-fzf-f; cat /tmp/rg-fzf-r)" \
+      --color "hl:-1:underline,hl+:-1:underline:reverse" \
+      --prompt '1. ripgrep> ' \
+      --delimiter : \
+      --header '╱ CTRL-R (ripgrep mode) ╱ CTRL-F (fzf mode) ╱' \
+      --preview 'bat --color=always {1} --highlight-line {2}' \
+      --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+      --bind 'enter:become(nvim {1} +{2})'
+}
+
+# =============================================================================
+# Process Management
+# =============================================================================
+
+# Kill process selected via fzf
+killz() {
+    local pid
+    pid=$(ps -ef | sed 1d | fzf --multi | awk '{print $2}')
+    if [[ -n "$pid" ]]; then
+        echo "$pid" | xargs kill -${1:-9}
+    fi
+}
+
+# =============================================================================
+# Utility Functions
+# =============================================================================
+
+# Extract various archive formats
+extract() {
+    if [[ -f "$1" ]]; then
+        case "$1" in
+            *.tar.bz2)   tar xjf "$1"     ;;
+            *.tar.gz)    tar xzf "$1"     ;;
+            *.tar.xz)    tar xJf "$1"     ;;
+            *.bz2)       bunzip2 "$1"     ;;
+            *.rar)       unrar x "$1"     ;;
+            *.gz)        gunzip "$1"      ;;
+            *.tar)       tar xf "$1"      ;;
+            *.tbz2)      tar xjf "$1"     ;;
+            *.tgz)       tar xzf "$1"     ;;
+            *.zip)       unzip "$1"       ;;
+            *.Z)         uncompress "$1"  ;;
+            *.7z)        7z x "$1"        ;;
+            *)           echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Cheat sheet for commands
+cheat() {
+    curl "cheat.sh/$1"
+}
+

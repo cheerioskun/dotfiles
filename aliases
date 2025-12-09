@@ -1,4 +1,39 @@
-alias rgz=/Users/hx/scripts/rgz.sh
-alias psql="docker run -ti --rm alpine/psql"
-alias preview='bat --style=numbers --color=always'
+# Shell Aliases
+# Sourced from $DOTFILES_DIR/aliases
+
+# =============================================================================
+# Navigation
+# =============================================================================
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# =============================================================================
+# File Operations
+# =============================================================================
+
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias rm='rm -iv'
+alias mkdir='mkdir -pv'
+
+# =============================================================================
+# Viewing Files
+# =============================================================================
+
+if command -v bat &> /dev/null; then
+    alias cat='bat --paging=never'
+    alias preview='bat --style=numbers --color=always'
+else
+    alias preview='less -N'
+fi
+
+# Git branch picker with fzf
 alias gb="git checkout \$(git for-each-ref --sort=-committerdate --format='%(refname:short)' refs/heads/ | fzf)"
+
+# =============================================================================
+# Misc
+# =============================================================================
+
+alias zshconfig='${EDITOR:-vim} ~/.zshrc'

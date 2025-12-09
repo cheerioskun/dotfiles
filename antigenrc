@@ -1,25 +1,54 @@
-# Load oh-my-zsh library.
+# Antigen Configuration
+# Plugin manager for zsh
+
+# Load oh-my-zsh library
 antigen use oh-my-zsh
-# Load bundles from the default repo (oh-my-zsh).
-antigen bundle git
+
+# =============================================================================
+# Core Plugins (zsh-users)
+# =============================================================================
 
 antigen bundle zsh-users/zsh-completions
 antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle zsh-users/zsh-syntax-highlighting
-antigen bundle zoxide
+
+# =============================================================================
+# Oh-My-Zsh Plugins
+# =============================================================================
+
+# Version Control
+antigen bundle git
+
+# Tools Integration
 antigen bundle fzf
+antigen bundle zoxide
 
-
-antigen bundle bazel
-antigen bundle docker
+# File Operations
 antigen bundle cp
+
+# =============================================================================
+# DevOps & Cloud (comment out if not needed)
+# =============================================================================
+
+antigen bundle docker
 antigen bundle docker-compose
 antigen bundle kubectl
-antigen bundle azure
 antigen bundle kubectx
 
-# Select theme.
+# Uncomment if using these tools:
+# antigen bundle azure
+# antigen bundle aws
+# antigen bundle terraform
+# antigen bundle bazel
+
+# =============================================================================
+# Theme
+# =============================================================================
+
 antigen theme romkatv/powerlevel10k
-# Tell Antigen that you're done.
+
+# =============================================================================
+# Apply Configuration
+# =============================================================================
 
 antigen apply

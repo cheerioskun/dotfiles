@@ -41,6 +41,7 @@ detect_os() {
             ;;
         Linux)
             OS="linux"
+            ;;
         *)
             log_error "Unsupported operating system: $(uname -s)"
             exit 1
@@ -87,14 +88,14 @@ main() {
     detect_os
     
     # Source common functions
-    source "$DOTFILES_DIR/install/common.sh"
+    source "$DOTFILES_DIR/tools/common.sh"
     
     # Run OS-specific installation
     if [[ "$OS" == "macos" ]]; then
-        source "$DOTFILES_DIR/install/macos.sh"
+        source "$DOTFILES_DIR/tools/macos.sh"
         install_macos
     else
-        source "$DOTFILES_DIR/install/linux.sh"
+        source "$DOTFILES_DIR/tools/linux.sh"
         install_linux
     fi
     

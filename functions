@@ -43,15 +43,6 @@ ff() {
     fi
 }
 
-# Find directory and cd into it
-cdz() {
-    local dir
-    dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null | fzf --height 40% --reverse --preview 'ls -la {}')
-    if [[ -n "$dir" ]]; then
-        cd "$dir"
-    fi
-}
-
 # ripgrep + fzf interactive search
 # Switch between Ripgrep launcher mode (CTRL-R) and fzf filtering mode (CTRL-F)
 rgz() {

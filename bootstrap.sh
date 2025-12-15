@@ -108,7 +108,8 @@ main() {
     echo ""
     log_success "Dotfiles installation complete!"
     echo ""
-    log_info "Please restart your shell or run: source ~/.zshrc"
+    log_info "Changing default shell to zsh..."
+    sudo chsh $(whoami) -s $(which zsh)
     echo ""
 }
 

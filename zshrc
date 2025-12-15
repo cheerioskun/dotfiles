@@ -45,22 +45,46 @@ elif [[ -f "/usr/local/bin/brew" ]]; then
 fi
 
 # =============================================================================
-# Antigen - Plugin Manager
+# Zinit - Plugin Manager
 # =============================================================================
 
-# Load antigen
-if [[ -f "$HOME/antigen.zsh" ]]; then
-    source "$HOME/antigen.zsh"
-    
-    # Load antigen configuration
-    if [[ -f "$DOTFILES_DIR/antigenrc" ]]; then
-        source "$DOTFILES_DIR/antigenrc"
-    fi
+# Load zinit
+ZINIT_HOME="${HOME}/.local/share/zinit/zinit.git"
+if [[ -f "${ZINIT_HOME}/zinit.zsh" ]]; then
+    source "${ZINIT_HOME}/zinit.zsh"
+
+    # Powerlevel10k theme (load immediately)
+    zinit ice depth=1
+    zinit light romkatv/powerlevel10k
+
+    # Oh-my-zsh snippets (turbo mode - load after prompt)
+    zinit wait lucid for \
+        OMZL::git.zsh \
+        OMZP::git \
+        OMZP::cp \
+        OMZP::docker \
+        OMZP::docker-compose \
+        OMZP::kubectl \
+        OMZP::kubectx
+
+    # External plugins (turbo mode)
+    zinit wait lucid for \
+        atinit"zicompinit; zicdreplay" \
+            zsh-users/zsh-syntax-highlighting \
+        atload"_zsh_autosuggest_start" \
+            zsh-users/zsh-autosuggestions \
+        blockf atpull'zinit creinstall -q .' \
+            zsh-users/zsh-completions
 fi
 
 # =============================================================================
-# fzf Completions
+# Tool Initializations
 # =============================================================================
+
+# Initialize zoxide (smarter cd)
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
 
 # Load fzf completions if fzf is available
 if command -v fzf &> /dev/null; then

@@ -6,7 +6,7 @@ Cross-platform dotfiles configuration for macOS, GitHub Codespaces, and Coder wo
 
 Automatically sets up your shell environment with:
 
-- **zsh** with **antigen** plugin manager
+- **zsh** with **zinit** plugin manager
 - **Powerlevel10k** prompt (pre-configured, no wizard)
 - Essential CLI tools: `fzf`, `ripgrep`, `bat`, `fd`, `lf`, `zoxide`, `jq`, `neovim`
 - Custom aliases and functions for common tasks
@@ -22,7 +22,7 @@ cd ~/repos/dotfiles
 The script will:
 1. Detect your OS (macOS or Linux)
 2. Install required tools via Homebrew (macOS) or apt/GitHub releases (Linux)
-3. Install antigen plugin manager
+3. Install zinit plugin manager
 4. Create symlinks for `~/.zshrc` and `~/.p10k.zsh`
 5. Set zsh as default shell (Linux only)
 
@@ -31,10 +31,9 @@ The script will:
 ```
 dotfiles/
 ├── bootstrap.sh      # Main installation script
-├── install/          # OS-specific installers
+├── tools/            # OS-specific installers
 ├── zshrc             # Main zsh configuration
 ├── p10k.zsh          # Powerlevel10k theme config
-├── antigenrc         # Antigen plugins configuration
 ├── aliases           # Shell aliases
 └── functions         # Shell functions (rgz, lfcd, ff, killz, etc.)
 ```

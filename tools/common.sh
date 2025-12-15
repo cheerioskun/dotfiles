@@ -3,20 +3,20 @@
 # Common installation functions shared between macOS and Linux
 #
 
-# Install antigen for zsh plugin management
-install_antigen() {
-    log_info "Installing antigen..."
-    
-    local antigen_path="$HOME/antigen.zsh"
-    
-    if [[ -f "$antigen_path" ]]; then
-        log_info "Antigen already installed"
-    else
-        curl -L git.io/antigen > "$antigen_path"
-        log_success "Antigen installed to $antigen_path"
+# Install zinit for zsh plugin management
+install_zinit() {
+    log_info "Installing zinit..."
+
+    local zinit_home="$HOME/.local/share/zinit/zinit.git"
+
+    if [[ -d "$zinit_home" ]]; then
+        log_info "Zinit already installed"
+        return 0
     fi
-    # Make completions directory (bug workaround)
-    mkdir -p $HOME/.antigen/bundles/robbyrussell/oh-my-zsh/cache/completions
+
+    mkdir -p "$(dirname "$zinit_home")"
+    git clone https://github.com/zdharma-continuum/zinit.git "$zinit_home"
+    log_success "Zinit installed to $zinit_home"
 }
 
 # Check if a command exists

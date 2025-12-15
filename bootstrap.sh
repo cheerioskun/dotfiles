@@ -99,8 +99,8 @@ main() {
         install_linux
     fi
     
-    # Install antigen (common for both)
-    install_antigen
+    # Install zinit (common for both)
+    install_zinit
     
     # Create symlinks
     create_symlinks

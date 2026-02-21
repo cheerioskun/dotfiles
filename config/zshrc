@@ -7,7 +7,7 @@
 
 # Find the dotfiles directory (where this zshrc is symlinked from)
 if [[ -L "$HOME/.zshrc" ]]; then
-    DOTFILES_DIR="$(dirname "$(readlink "$HOME/.zshrc")")"
+    DOTFILES_DIR="$(dirname "$(dirname "$(readlink "$HOME/.zshrc")")")"
 else
     # Fallback locations
     if [[ -d "$HOME/repos/dotfiles" ]]; then
@@ -36,6 +36,11 @@ fi
 
 # Add local bin directories
 export PATH="$HOME/.local/bin:$PATH"
+
+# Rust/Cargo
+if [[ -d "$HOME/.cargo/bin" ]]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
 
 # Homebrew (macOS)
 if [[ -f "/opt/homebrew/bin/brew" ]]; then
@@ -91,18 +96,23 @@ if command -v fzf &> /dev/null; then
     source <(fzf --zsh)
 fi
 
+# Initialize direnv (per-directory env vars)
+if command -v direnv &> /dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
 # =============================================================================
 # Source Custom Configs
 # =============================================================================
 
 # Source aliases
-if [[ -f "$DOTFILES_DIR/aliases" ]]; then
-    source "$DOTFILES_DIR/aliases"
+if [[ -f "$DOTFILES_DIR/config/aliases" ]]; then
+    source "$DOTFILES_DIR/config/aliases"
 fi
 
 # Source functions
-if [[ -f "$DOTFILES_DIR/functions" ]]; then
-    source "$DOTFILES_DIR/functions"
+if [[ -f "$DOTFILES_DIR/config/functions" ]]; then
+    source "$DOTFILES_DIR/config/functions"
 fi
 
 # =============================================================================

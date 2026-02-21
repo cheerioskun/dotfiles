@@ -55,8 +55,11 @@ create_symlinks() {
     log_info "Creating symlinks..."
     
     local files=(
-        "zshrc:$HOME/.zshrc"
-        "p10k.zsh:$HOME/.p10k.zsh"
+        "config/zshrc:$HOME/.zshrc"
+        "config/p10k.zsh:$HOME/.p10k.zsh"
+        "config/tmux.conf:$HOME/.tmux.conf"
+        "config/psqlrc:$HOME/.psqlrc"
+        "config/jjconfig.toml:$HOME/.jjconfig.toml"
     )
     
     for item in "${files[@]}"; do

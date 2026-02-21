@@ -111,9 +111,6 @@ main() {
     echo ""
     log_success "Dotfiles installation complete!"
     echo ""
-    log_info "Changing default shell to zsh..."
-    sudo chsh $(whoami) -s $(which zsh)
-    echo ""
 }
 
 # Run main function

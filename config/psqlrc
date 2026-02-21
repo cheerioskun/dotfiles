@@ -1,0 +1,22 @@
+-- Expanded display when output is wide
+\x auto
+
+-- Show query execution time
+\timing
+
+-- Show null values distinctly
+\pset null '(null)'
+
+-- Autocomplete keywords in uppercase
+\set COMP_KEYWORD_CASE upper
+
+-- Verbose error reports
+\set VERBOSITY verbose
+
+-- History
+\set HISTSIZE 5000
+\set HISTCONTROL ignoredups
+
+-- Prompt: host:port user@db=#
+\set PROMPT1 '%M:%> %n@%/%R%#%x '
+\set PROMPT2 '%M:%> %n@%/%R%#%x '

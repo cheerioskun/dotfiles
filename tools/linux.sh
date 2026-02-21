@@ -20,6 +20,12 @@ install_linux() {
     # Install packages not in apt from GitHub releases
     install_github_packages
     
+    # Rust toolchain (needed before jj)
+    install_rustup
+    
+    # jj (jujutsu) VCS via cargo
+    install_jj_linux
+    
     # Ensure zsh is set up
     ensure_zsh
     set_default_shell
@@ -38,6 +44,9 @@ install_apt_packages() {
         neovim
         jq
         zoxide
+        tmux
+        postgresql-client
+        direnv
     )
     
     # Check which packages need to be installed
@@ -81,7 +90,48 @@ install_github_packages() {
     
     # lf file manager
     install_lf
+    
+    # GitHub CLI
+    install_gh_linux
+}
 
+# Install GitHub CLI
+# https://github.com/cli/cli
+install_gh_linux() {
+    if command_exists gh; then
+        log_info "gh is already installed"
+        return 0
+    fi
+    
+    log_info "Installing GitHub CLI..."
+    
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y gh
+    
+    log_success "gh installed"
+}
+
+# Install jj (jujutsu) VCS via cargo
+# https://github.com/jj-vcs/jj
+install_jj_linux() {
+    if command_exists jj; then
+        log_info "jj is already installed"
+        return 0
+    fi
+    
+    if ! command_exists cargo; then
+        log_warn "cargo not found, skipping jj installation"
+        return 1
+    fi
+    
+    log_info "Installing jj (jujutsu)..."
+    cargo install --locked jj-cli
+    log_success "jj installed"
 }
 
 # Install fzf fuzzy finder

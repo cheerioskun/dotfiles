@@ -78,6 +78,23 @@ get_arch() {
     esac
 }
 
+# Install Rust via rustup (cross-platform)
+# https://rustup.rs
+install_rustup() {
+    if command_exists cargo; then
+        log_info "Rust/Cargo is already installed"
+        return 0
+    fi
+    
+    log_info "Installing Rust via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    
+    # Add cargo to PATH for current session
+    source "$HOME/.cargo/env"
+    
+    log_success "Rust installed"
+}
+
 # =============================================================================
 # Tool-specific installers for Linux
 # =============================================================================

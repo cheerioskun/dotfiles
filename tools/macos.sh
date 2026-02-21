@@ -12,6 +12,12 @@ install_macos() {
     # Install packages via Homebrew
     install_brew_packages
     
+    # psql client (keg-only, needs explicit linking)
+    install_libpq
+    
+    # Rust toolchain
+    install_rustup
+    
     # Ensure zsh is set up
     ensure_zsh
 }
@@ -44,6 +50,12 @@ install_brew_packages() {
         fd
         neovim
         jq
+        jj
+        iproute2mac
+        less
+        tmux
+        gh
+        direnv
     )
     
     for pkg in "${packages[@]}"; do
@@ -55,6 +67,17 @@ install_brew_packages() {
             log_success "$pkg installed"
         fi
     done
+}
 
+install_libpq() {
+    if command_exists psql; then
+        log_info "psql is already available"
+        return 0
+    fi
+    
+    log_info "Installing libpq (PostgreSQL client tools)..."
+    brew install libpq
+    brew link --force libpq
+    log_success "libpq installed and linked"
 }
 

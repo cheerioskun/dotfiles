@@ -78,6 +78,40 @@ get_arch() {
     esac
 }
 
+# Download and install a binary from a GitHub release tarball.
+# Usage: install_github_release <cmd> <url> [binary_name_in_archive]
+#   cmd    - command name (used for existence check and destination filename)
+#   url    - full URL to the .tar.gz asset
+#   binary - name of the binary inside the archive (defaults to cmd)
+install_github_release() {
+    local cmd="$1"
+    local url="$2"
+    local binary="${3:-$cmd}"
+    
+    if command_exists "$cmd"; then
+        log_info "$cmd is already installed"
+        return 0
+    fi
+    
+    log_info "Installing $cmd..."
+    
+    local install_dir="$HOME/.local/bin"
+    mkdir -p "$install_dir"
+    
+    local tmp_dir=$(mktemp -d)
+    cd "$tmp_dir"
+    
+    curl -sL "$url" -o archive.tar.gz
+    tar -xzf archive.tar.gz
+    mv "$binary" "$install_dir/$cmd"
+    chmod +x "$install_dir/$cmd"
+    
+    cd - > /dev/null
+    rm -rf "$tmp_dir"
+    
+    log_success "$cmd installed to $install_dir"
+}
+
 # Install Rust via rustup (cross-platform)
 # https://rustup.rs
 install_rustup() {
@@ -102,32 +136,9 @@ install_rustup() {
 # Install lf file manager
 # https://github.com/gokcehan/lf
 install_lf() {
-    if command_exists lf; then
-        log_info "lf is already installed"
-        return 0
-    fi
-    
-    log_info "Installing lf..."
-    
     local arch=$(get_arch)
-    local install_dir="$HOME/.local/bin"
-    mkdir -p "$install_dir"
-    
-    # lf uses /latest/download/ which auto-redirects to current version
-    local url="https://github.com/gokcehan/lf/releases/latest/download/lf-linux-${arch}.tar.gz"
-    
-    local tmp_dir=$(mktemp -d)
-    cd "$tmp_dir"
-    
-    curl -sL "$url" -o lf.tar.gz
-    tar -xzf lf.tar.gz
-    mv lf "$install_dir/lf"
-    chmod +x "$install_dir/lf"
-    
-    cd - > /dev/null
-    rm -rf "$tmp_dir"
-    
-    log_success "lf installed to $install_dir"
+    install_github_release lf \
+        "https://github.com/gokcehan/lf/releases/latest/download/lf-linux-${arch}.tar.gz"
 }
 
 # Install zoxide (smarter cd)

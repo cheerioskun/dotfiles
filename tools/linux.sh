@@ -23,7 +23,7 @@ install_linux() {
     # Rust toolchain (needed before jj)
     install_rustup
     
-    # jj (jujutsu) VCS via cargo
+    # jj (jujutsu) VCS
     install_jj_linux
     
     # Ensure zsh is set up
@@ -116,49 +116,23 @@ install_gh_linux() {
     log_success "gh installed"
 }
 
-# Install jj (jujutsu) VCS via cargo
+# Install jj (jujutsu) VCS from GitHub release
 # https://github.com/jj-vcs/jj
 install_jj_linux() {
-    if command_exists jj; then
-        log_info "jj is already installed"
-        return 0
-    fi
-    
-    if ! command_exists cargo; then
-        log_warn "cargo not found, skipping jj installation"
-        return 1
-    fi
-    
-    log_info "Installing jj (jujutsu)..."
-    cargo install --locked jj-cli
-    log_success "jj installed"
+    local arch=$(get_arch)
+    local target
+    case "$arch" in
+        amd64) target="x86_64-unknown-linux-musl" ;;
+        arm64) target="aarch64-unknown-linux-musl" ;;
+        *)     log_error "Unsupported architecture: $arch"; return 1 ;;
+    esac
+    install_github_release jj \
+        "https://github.com/jj-vcs/jj/releases/download/v0.38.0/jj-v0.38.0-${target}.tar.gz"
 }
 
 # Install fzf fuzzy finder
 # https://github.com/junegunn/fzf
 install_fzf() {
-    if command_exists fzf; then
-        log_info "fzf is already installed"
-        return 0
-    fi
-    
-    log_info "Installing fzf..."
-    
-    local install_dir="$HOME/.local/bin"
-    mkdir -p "$install_dir"
-    
-    local url="https://github.com/junegunn/fzf/releases/download/v0.67.0/fzf-0.67.0-linux_amd64.tar.gz"
-    
-    local tmp_dir=$(mktemp -d)
-    cd "$tmp_dir"
-    
-    curl -sL "$url" -o fzf.tar.gz
-    tar -xzf fzf.tar.gz
-    mv fzf "$install_dir/fzf"
-    chmod +x "$install_dir/fzf"
-    
-    cd - > /dev/null
-    rm -rf "$tmp_dir"
-    
-    log_success "fzf installed to $install_dir"
+    install_github_release fzf \
+        "https://github.com/junegunn/fzf/releases/download/v0.67.0/fzf-0.67.0-linux_amd64.tar.gz"
 }

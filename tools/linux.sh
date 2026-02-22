@@ -10,21 +10,21 @@ install_linux() {
     # Ensure ~/.local/bin exists and is in PATH
     ensure_local_bin
     
-    # Update package lists
+    # Add third-party apt repos before update so we only run apt-get update once
+    setup_gh_apt_repo
+    
+    # Update package lists (single update covers all repos including gh)
     log_info "Updating package lists..."
     sudo apt-get update
     
-    # Install packages via apt
+    # Install packages via apt (includes gh)
     install_apt_packages
     
-    # Install packages not in apt from GitHub releases
+    # Download binaries from GitHub releases (fzf, lf, jj in parallel)
     install_github_packages
     
-    # Rust toolchain (needed before jj)
+    # Rust toolchain
     install_rustup
-    
-    # jj (jujutsu) VCS
-    install_jj_linux
     
     # Ensure zsh is set up
     ensure_zsh
@@ -47,6 +47,7 @@ install_apt_packages() {
         tmux
         postgresql-client
         direnv
+        gh
     )
     
     # Check which packages need to be installed
@@ -85,35 +86,29 @@ install_apt_packages() {
 install_github_packages() {
     log_info "Installing packages from GitHub releases..."
     
-    # fzf fuzzy finder
-    install_fzf
-    
-    # lf file manager
-    install_lf
-    
-    # GitHub CLI
-    install_gh_linux
+    install_fzf &
+    install_lf &
+    install_jj_linux &
+    wait
 }
 
-# Install GitHub CLI
+# Add GitHub CLI apt repo (called before apt-get update so we only update once)
 # https://github.com/cli/cli
-install_gh_linux() {
+setup_gh_apt_repo() {
     if command_exists gh; then
-        log_info "gh is already installed"
         return 0
     fi
     
-    log_info "Installing GitHub CLI..."
+    if [[ -f /usr/share/keyrings/githubcli-archive-keyring.gpg ]]; then
+        return 0
+    fi
     
+    log_info "Adding GitHub CLI apt repository..."
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+        | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
     sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
         | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    sudo apt-get update
-    sudo apt-get install -y gh
-    
-    log_success "gh installed"
 }
 
 # Install jj (jujutsu) VCS from GitHub release

@@ -67,6 +67,11 @@ if [[ -f "${ZINIT_HOME}/zinit.zsh" ]]; then
     zinit ice depth=1
     zinit light romkatv/powerlevel10k
 
+    # Catppuccin colors for p10k
+    zstyle ':catppuccin:p10k' 'theme' 'lean'
+    zstyle ':catppuccin:p10k' 'flavour' 'mocha'
+    zinit light tolkonepiu/catppuccin-powerlevel10k-themes
+
     # Oh-my-zsh snippets (turbo mode - load after prompt)
     zinit wait lucid for \
         OMZL::git.zsh \

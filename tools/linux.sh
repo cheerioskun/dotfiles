@@ -54,10 +54,10 @@ install_apt_packages() {
     # Check which packages need to be installed
     local packages_to_install=()
     for pkg in "${packages[@]}"; do
-        if ! dpkg -l "$pkg" &>/dev/null; then
-            packages_to_install+=("$pkg")
-        else
+        if dpkg -s "$pkg" &>/dev/null; then
             log_info "$pkg is already installed"
+        else
+            packages_to_install+=("$pkg")
         fi
     done
     

@@ -53,7 +53,7 @@ set_default_shell() {
             echo "$zsh_path" | sudo tee -a /etc/shells
         fi
         
-        chsh -s "$zsh_path" || log_warn "Could not change default shell. You may need to do this manually."
+        sudo chsh -s "$zsh_path" "$(whoami)" || log_warn "Could not change default shell. You may need to do this manually."
     fi
 }
 

@@ -42,6 +42,11 @@ if [[ -d "$HOME/.cargo/bin" ]]; then
     export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
+# Bun
+if [[ -d "$HOME/.bun/bin" ]]; then
+    export PATH="$HOME/.bun/bin:$PATH"
+fi
+
 # Homebrew (macOS)
 if [[ -f "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"

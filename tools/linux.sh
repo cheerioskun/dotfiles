@@ -48,6 +48,7 @@ install_apt_packages() {
         postgresql-client
         direnv
         gh
+        unzip
     )
     
     # Check which packages need to be installed
@@ -89,6 +90,8 @@ install_github_packages() {
     install_fzf &
     install_lf &
     install_jj_linux &
+    install_bun &
+    install_opencode &
     wait
 }
 

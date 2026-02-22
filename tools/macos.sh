@@ -18,6 +18,10 @@ install_macos() {
     # Rust toolchain
     install_rustup
     
+    # Cross-platform curl installers
+    install_bun
+    install_opencode
+    
     # Ensure zsh is set up
     ensure_zsh
 }

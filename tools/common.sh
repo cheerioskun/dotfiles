@@ -129,6 +129,32 @@ install_rustup() {
     log_success "Rust installed"
 }
 
+# Install bun (cross-platform)
+# https://bun.sh
+install_bun() {
+    if command_exists bun; then
+        log_info "bun is already installed"
+        return 0
+    fi
+    
+    log_info "Installing bun..."
+    curl -fsSL https://bun.com/install | bash
+    log_success "bun installed"
+}
+
+# Install opencode (cross-platform)
+# https://opencode.ai
+install_opencode() {
+    if command_exists opencode; then
+        log_info "opencode is already installed"
+        return 0
+    fi
+    
+    log_info "Installing opencode..."
+    curl -fsSL https://opencode.ai/install | bash
+    log_success "opencode installed"
+}
+
 # =============================================================================
 # Tool-specific installers for Linux
 # =============================================================================

@@ -3,6 +3,20 @@
 # Common installation functions shared between macOS and Linux
 #
 
+# Install TPM (Tmux Plugin Manager)
+install_tpm() {
+    local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+    if [[ -d "$tpm_dir" ]]; then
+        log_info "TPM already installed"
+        return 0
+    fi
+
+    log_info "Installing TPM..."
+    git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+    log_success "TPM installed (run prefix + I inside tmux to install plugins)"
+}
+
 # Install zinit for zsh plugin management
 install_zinit() {
     log_info "Installing zinit..."

@@ -102,8 +102,9 @@ main() {
         install_linux
     fi
     
-    # Install zinit (common for both)
+    # Install zinit and TPM (common for both)
     install_zinit
+    install_tpm
     
     # Create symlinks
     create_symlinks

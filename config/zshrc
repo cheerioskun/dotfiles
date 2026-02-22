@@ -133,6 +133,44 @@ else
 fi
 
 # =============================================================================
+# Vi Mode (Vim keybindings in shell)
+# =============================================================================
+
+# Enable vi mode
+bindkey -v
+
+# Reduce ESC delay (default 400ms is painful)
+export KEYTIMEOUT=1
+
+# Keep useful Emacs bindings even in vi mode
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^P' up-history
+bindkey '^N' down-history
+bindkey '^W' backward-kill-word
+bindkey '^U' backward-kill-line
+bindkey '^K' kill-line
+
+# Restore Ctrl-R: fzf if available, else basic search
+if (( $+widgets[fzf-history-widget] )); then
+    bindkey '^R' fzf-history-widget
+else
+    bindkey '^R' history-incremental-search-backward
+fi
+
+# Refresh prompt on vi mode change (needed for p10k vi_mode segment)
+function zle-keymap-select zle-line-init {
+    zle reset-prompt
+    zle -R
+}
+function zle-line-finish {
+    zle reset-prompt
+}
+zle -N zle-keymap-select
+zle -N zle-line-init
+zle -N zle-line-finish
+
+# =============================================================================
 # History Configuration
 # =============================================================================
 

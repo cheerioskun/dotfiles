@@ -20,15 +20,15 @@ install_linux() {
     # Install packages via apt (includes gh)
     install_apt_packages
     
+    # Ensure zsh is set up and set as default shell before installing tools
+    ensure_zsh
+    set_default_shell
+    
     # Download binaries from GitHub releases (fzf, lf, jj in parallel)
     install_github_packages
     
     # Rust toolchain
     install_rustup
-    
-    # Ensure zsh is set up
-    ensure_zsh
-    set_default_shell
 }
 
 install_apt_packages() {

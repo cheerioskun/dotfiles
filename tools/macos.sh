@@ -15,15 +15,15 @@ install_macos() {
     # psql client (keg-only, needs explicit linking)
     install_libpq
     
+    # Ensure zsh is set up
+    ensure_zsh
+    
     # Rust toolchain
     install_rustup
     
     # Cross-platform curl installers
     install_bun
     install_opencode
-    
-    # Ensure zsh is set up
-    ensure_zsh
 }
 
 install_homebrew() {

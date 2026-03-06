@@ -126,6 +126,27 @@ install_github_release() {
     log_success "$cmd installed to $install_dir"
 }
 
+# Install weave semantic merge driver (cross-platform)
+# https://github.com/Ataraxy-Labs/weave
+install_weave() {
+    if command_exists weave-cli; then
+        log_info "weave is already installed"
+        return 0
+    fi
+
+    local target
+    case "$(uname -s)-$(uname -m)" in
+        Darwin-arm64)  target="aarch64-apple-darwin" ;;
+        Darwin-x86_64) target="x86_64-apple-darwin" ;;
+        Linux-x86_64)  target="x86_64-unknown-linux-gnu" ;;
+        Linux-aarch64) target="aarch64-unknown-linux-gnu" ;;
+        *) log_error "Unsupported platform for weave"; return 1 ;;
+    esac
+
+    install_github_release weave-cli \
+        "https://github.com/Ataraxy-Labs/weave/releases/download/v0.2.0/weave-cli-${target}.tar.gz"
+}
+
 # Install Rust via rustup (cross-platform)
 # https://rustup.rs
 install_rustup() {

@@ -24,6 +24,7 @@ install_macos() {
     # Cross-platform curl installers
     install_bun
     install_opencode
+    install_weave
 }
 
 install_homebrew() {
@@ -60,6 +61,7 @@ install_brew_packages() {
         tmux
         gh
         direnv
+        git-delta
     )
     
     for pkg in "${packages[@]}"; do

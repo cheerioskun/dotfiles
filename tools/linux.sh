@@ -24,7 +24,7 @@ install_linux() {
     ensure_zsh
     set_default_shell
     
-    # Download binaries from GitHub releases (fzf, lf, jj in parallel)
+    # Download binaries from GitHub releases (parallel)
     install_github_packages
     
     # Rust toolchain
@@ -92,6 +92,8 @@ install_github_packages() {
     install_jj_linux &
     install_bun &
     install_opencode &
+    install_delta &
+    install_weave &
     wait
 }
 
@@ -126,6 +128,14 @@ install_jj_linux() {
     esac
     install_github_release jj \
         "https://github.com/jj-vcs/jj/releases/download/v0.38.0/jj-v0.38.0-${target}.tar.gz"
+}
+
+# Install delta (better git diffs)
+# https://github.com/dandavison/delta
+install_delta() {
+    install_github_release delta \
+        "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz" \
+        "delta-0.18.2-x86_64-unknown-linux-musl/delta"
 }
 
 # Install fzf fuzzy finder

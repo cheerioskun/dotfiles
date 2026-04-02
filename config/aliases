@@ -53,6 +53,6 @@ wnew() {
         echo "Usage: wnew <workspace-name>"
         return 1
     fi
-    coder create "$(whoami)-zamp/$1" -t ZampAISetup-Neo -y \
+    coder create "$(whoami)-zamp/$1" -t zamp-ai-setup-eks -y \
         --parameter dotfiles_uri=https://github.com/cheerioskun/dotfiles
 }

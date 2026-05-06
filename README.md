@@ -46,8 +46,19 @@ dotfiles/
 - **killz**: Kill processes via fzf
 - **z**: Fuzzy directory jumping (via zoxide)
 
+## Linux Validation
+
+For a fresh Ubuntu 24.04 environment, validate the Linux path from `zsh` after bootstrap:
+
+```bash
+./bootstrap.sh
+zsh -ic 'command -v fzf delta lf jj weave-cli bun opencode gh zoxide nvim'
+zsh -ic 'fzf --version && delta --version && lf -version && jj --version && weave-cli --help >/dev/null'
+```
+
+First-run `zinit` plugin downloads are expected when `zsh` starts for the first time.
+
 ## Requirements
 
 - macOS: Homebrew (installed automatically if missing)
-- Linux: Debian/Ubuntu-based system with `apt` and `sudo` access
-
+- Linux: Debian/Ubuntu-based system with `apt`; `sudo` is used automatically when not already running as `root`

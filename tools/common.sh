@@ -38,6 +38,18 @@ command_exists() {
     command -v "$1" &> /dev/null
 }
 
+# Run a command directly as root, or via sudo for normal users.
+run_privileged() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        "$@"
+    elif command_exists sudo; then
+        sudo "$@"
+    else
+        log_error "sudo is required to run: $*"
+        return 1
+    fi
+}
+
 # Install zsh if not present
 ensure_zsh() {
     if command_exists zsh; then
@@ -47,7 +59,8 @@ ensure_zsh() {
         if [[ "$OS" == "macos" ]]; then
             brew install zsh
         else
-            sudo apt-get update && sudo apt-get install -y zsh
+            run_privileged apt-get update
+            run_privileged apt-get install -y zsh
         fi
         log_success "zsh installed"
     fi
@@ -60,14 +73,14 @@ set_default_shell() {
     else
         log_info "Setting zsh as default shell..."
         local zsh_path
-        zsh_path=$(which zsh)
+        zsh_path=$(command -v zsh)
         
         # Add zsh to /etc/shells if not present
         if ! grep -q "$zsh_path" /etc/shells 2>/dev/null; then
-            echo "$zsh_path" | sudo tee -a /etc/shells
+            printf '%s\n' "$zsh_path" | run_privileged tee -a /etc/shells > /dev/null
         fi
         
-        sudo chsh -s "$zsh_path" "$(whoami)" || log_warn "Could not change default shell. You may need to do this manually."
+        run_privileged chsh -s "$zsh_path" "$(id -un)" || log_warn "Could not change default shell. You may need to do this manually."
     fi
 }
 
@@ -101,6 +114,12 @@ install_github_release() {
     local cmd="$1"
     local url="$2"
     local binary="${3:-$cmd}"
+    local binary_basename
+    local install_dir="$HOME/.local/bin"
+    local tmp_dir
+    local resolved_binary
+    local matches=()
+    local match
     
     if command_exists "$cmd"; then
         log_info "$cmd is already installed"
@@ -109,18 +128,42 @@ install_github_release() {
     
     log_info "Installing $cmd..."
     
-    local install_dir="$HOME/.local/bin"
     mkdir -p "$install_dir"
     
-    local tmp_dir=$(mktemp -d)
-    cd "$tmp_dir"
-    
-    curl -sL "$url" -o archive.tar.gz
-    tar -xzf archive.tar.gz
-    mv "$binary" "$install_dir/$cmd"
+    tmp_dir="$(mktemp -d)"
+
+    if ! (
+        cd "$tmp_dir" &&
+        curl -fsSL "$url" -o archive.tar.gz &&
+        tar -xzf archive.tar.gz
+    ); then
+        rm -rf "$tmp_dir"
+        log_error "Failed to download or extract $cmd from $url"
+        return 1
+    fi
+
+    resolved_binary="$tmp_dir/$binary"
+    if [[ ! -f "$resolved_binary" ]]; then
+        binary_basename="$(basename "$binary")"
+        while IFS= read -r match; do
+            matches+=("$match")
+        done < <(find "$tmp_dir" -type f -name "$binary_basename")
+
+        if [[ ${#matches[@]} -eq 1 ]]; then
+            resolved_binary="${matches[0]}"
+        else
+            rm -rf "$tmp_dir"
+            if [[ ${#matches[@]} -eq 0 ]]; then
+                log_error "Could not find $binary_basename in the extracted archive for $cmd"
+            else
+                log_error "Found multiple matches for $binary_basename in the extracted archive for $cmd"
+            fi
+            return 1
+        fi
+    fi
+
+    mv "$resolved_binary" "$install_dir/$cmd"
     chmod +x "$install_dir/$cmd"
-    
-    cd - > /dev/null
     rm -rf "$tmp_dir"
     
     log_success "$cmd installed to $install_dir"
@@ -144,7 +187,8 @@ install_weave() {
     esac
 
     install_github_release weave-cli \
-        "https://github.com/Ataraxy-Labs/weave/releases/download/v0.2.0/weave-cli-${target}.tar.gz"
+        "https://github.com/Ataraxy-Labs/weave/releases/download/v0.2.0/weave-cli-${target}.tar.gz" \
+        "weave"
 }
 
 # Install Rust via rustup (cross-platform)
@@ -156,7 +200,10 @@ install_rustup() {
     fi
     
     log_info "Installing Rust via rustup..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    if ! (set -o pipefail; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y); then
+        log_error "Rust installation failed"
+        return 1
+    fi
     
     # Add cargo to PATH for current session
     source "$HOME/.cargo/env"
@@ -173,7 +220,10 @@ install_bun() {
     fi
     
     log_info "Installing bun..."
-    curl -fsSL https://bun.com/install | bash
+    if ! (set -o pipefail; curl -fsSL https://bun.com/install | bash); then
+        log_error "bun installation failed"
+        return 1
+    fi
     log_success "bun installed"
 }
 
@@ -186,7 +236,10 @@ install_opencode() {
     fi
     
     log_info "Installing opencode..."
-    curl -fsSL https://opencode.ai/install | bash
+    if ! (set -o pipefail; curl -fsSL https://opencode.ai/install | bash); then
+        log_error "opencode installation failed"
+        return 1
+    fi
     log_success "opencode installed"
 }
 
@@ -213,7 +266,10 @@ install_zoxide() {
     log_info "Installing zoxide..."
     
     # zoxide provides an install script that handles everything
-    curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+    if ! (set -o pipefail; curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash); then
+        log_error "zoxide installation failed"
+        return 1
+    fi
     
     log_success "zoxide installed"
 }

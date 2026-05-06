@@ -43,16 +43,3 @@ alias tat='tmux attach'
 # =============================================================================
 
 alias zshconfig='${EDITOR:-vim} ~/.zshrc'
-
-# =============================================================================
-# Coder
-# =============================================================================
-
-wnew() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: wnew <workspace-name>"
-        return 1
-    fi
-    coder create "$(whoami)-zamp/$1" -t zamp-ai-setup-eks -y \
-        --parameter dotfiles_uri=https://github.com/cheerioskun/dotfiles
-}

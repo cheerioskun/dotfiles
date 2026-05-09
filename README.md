@@ -10,6 +10,8 @@ Automatically sets up your shell environment with:
 - **Powerlevel10k** prompt (pre-configured, no wizard)
 - Essential CLI tools: `fzf`, `ripgrep`, `bat`, `fd`, `lf`, `zoxide`, `jq`, `neovim`
 - Custom aliases and functions for common tasks
+- `opencode`, `bun`, and `rustup` are installed into their own home directories and added to `PATH` by `zsh`
+- iTerm2 preferences are backed up from `~/Library/Preferences/com.googlecode.iterm2.plist`
 
 ## Quick Start
 
@@ -22,9 +24,11 @@ cd ~/repos/dotfiles
 The script will:
 1. Detect your OS (macOS or Linux)
 2. Install required tools via Homebrew (macOS) or apt/GitHub releases (Linux)
-3. Install zinit plugin manager
-4. Create symlinks for `~/.zshrc` and `~/.p10k.zsh`
-5. Set zsh as default shell (Linux only)
+3. Create symlinks for `~/.zshrc`, `~/.p10k.zsh`, `~/.tmux.conf`, `~/.psqlrc`, and `~/.jjconfig.toml`
+4. Create the iTerm2 preference link for `~/Library/Preferences/com.googlecode.iterm2.plist`
+5. Install zinit and TPM
+6. Set `zsh` as the default shell on both macOS and Linux when possible
+7. Reload into `zsh` at the end of bootstrap when run interactively
 
 ## Structure
 
@@ -57,6 +61,10 @@ zsh -ic 'fzf --version && delta --version && lf -version && jj --version && weav
 ```
 
 First-run `zinit` plugin downloads are expected when `zsh` starts for the first time.
+
+## Shell Reload
+
+After bootstrap finishes in an interactive terminal, it will try to `exec zsh -l` so the new config is active immediately. If you prefer to stay in the current shell, set `DOTFILES_AUTO_EXEC_ZSH=0` before running the script.
 
 ## Requirements
 

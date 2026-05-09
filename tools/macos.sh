@@ -3,28 +3,24 @@
 # macOS-specific installation
 #
 
-install_macos() {
-    log_info "Running macOS installation..."
-    
-    # Install Homebrew if not present
+install_macos_required() {
+    log_info "Running macOS required installation..."
+
     install_homebrew
-    
-    # Install packages via Homebrew
+    ensure_local_bin
     install_brew_packages
-    
-    # psql client (keg-only, needs explicit linking)
     install_libpq
-    
-    # Ensure zsh is set up
     ensure_zsh
-    
-    # Rust toolchain
-    install_rustup
-    
-    # Cross-platform curl installers
-    install_bun
-    install_opencode
-    install_weave
+    set_default_shell
+}
+
+install_macos_optional() {
+    log_info "Running macOS optional installation..."
+
+    run_optional_step "rustup" install_rustup
+    run_optional_step "bun" install_bun
+    run_optional_step "opencode" install_opencode
+    run_optional_step "weave" install_weave
 }
 
 install_homebrew() {
@@ -86,4 +82,3 @@ install_libpq() {
     brew link --force libpq
     log_success "libpq installed and linked"
 }
-

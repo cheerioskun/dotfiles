@@ -38,6 +38,14 @@ command_exists() {
     command -v "$1" &> /dev/null
 }
 
+path_prepend_if_dir() {
+    local dir="$1"
+
+    if [[ -d "$dir" ]] && [[ ":$PATH:" != *":$dir:"* ]]; then
+        export PATH="$dir:$PATH"
+    fi
+}
+
 # Run a command directly as root, or via sudo for normal users.
 run_privileged() {
     if [[ "$(id -u)" -eq 0 ]]; then
@@ -68,31 +76,42 @@ ensure_zsh() {
 
 # Set zsh as default shell
 set_default_shell() {
-    if [[ "$SHELL" == *"zsh"* ]]; then
-        log_info "zsh is already the default shell"
-    else
-        log_info "Setting zsh as default shell..."
-        local zsh_path
-        zsh_path=$(command -v zsh)
-        
-        # Add zsh to /etc/shells if not present
-        if ! grep -q "$zsh_path" /etc/shells 2>/dev/null; then
-            printf '%s\n' "$zsh_path" | run_privileged tee -a /etc/shells > /dev/null
-        fi
-        
-        run_privileged chsh -s "$zsh_path" "$(id -un)" || log_warn "Could not change default shell. You may need to do this manually."
+    local zsh_path
+    local user_shell
+
+    zsh_path=$(command -v zsh)
+    user_shell=""
+
+    if [[ "$OS" == "macos" ]]; then
+        user_shell=$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}' || true)
+    elif command_exists getent; then
+        user_shell=$(getent passwd "$(id -un)" | cut -d: -f7)
     fi
+
+    if [[ "$user_shell" == "$zsh_path" ]]; then
+        log_info "zsh is already the default shell"
+        return 0
+    fi
+
+    log_info "Setting zsh as default shell..."
+
+    # Add zsh to /etc/shells if not present
+    if ! grep -q "$zsh_path" /etc/shells 2>/dev/null; then
+        printf '%s\n' "$zsh_path" | run_privileged tee -a /etc/shells > /dev/null
+    fi
+
+    run_privileged chsh -s "$zsh_path" "$(id -un)" || log_warn "Could not change default shell. You may need to do this manually."
 }
 
 # Ensure ~/.local/bin is in PATH
 ensure_local_bin() {
     local local_bin="$HOME/.local/bin"
     mkdir -p "$local_bin"
-    
+
     if [[ ":$PATH:" != *":$local_bin:"* ]]; then
-        export PATH="$local_bin:$PATH"
         log_info "Added $local_bin to PATH"
     fi
+    path_prepend_if_dir "$local_bin"
 }
 
 # Detect architecture
@@ -206,7 +225,11 @@ install_rustup() {
     fi
     
     # Add cargo to PATH for current session
-    source "$HOME/.cargo/env"
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    else
+        path_prepend_if_dir "$HOME/.cargo/bin"
+    fi
     
     log_success "Rust installed"
 }
@@ -218,12 +241,18 @@ install_bun() {
         log_info "bun is already installed"
         return 0
     fi
-    
+
+    export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+    mkdir -p "$BUN_INSTALL/bin"
+    path_prepend_if_dir "$BUN_INSTALL/bin"
+
     log_info "Installing bun..."
     if ! (set -o pipefail; curl -fsSL https://bun.com/install | bash); then
         log_error "bun installation failed"
         return 1
     fi
+
+    path_prepend_if_dir "$BUN_INSTALL/bin"
     log_success "bun installed"
 }
 
@@ -234,12 +263,17 @@ install_opencode() {
         log_info "opencode is already installed"
         return 0
     fi
-    
+
+    local opencode_bin="$HOME/.opencode/bin"
+    mkdir -p "$opencode_bin"
+
     log_info "Installing opencode..."
-    if ! (set -o pipefail; curl -fsSL https://opencode.ai/install | bash); then
+    if ! (set -o pipefail; curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path); then
         log_error "opencode installation failed"
         return 1
     fi
+
+    path_prepend_if_dir "$opencode_bin"
     log_success "opencode installed"
 }
 

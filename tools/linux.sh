@@ -4,24 +4,20 @@
 # For GitHub Codespaces and Coder workspaces
 #
 
-install_linux() {
-    log_info "Running Linux installation..."
-    
-    # Ensure ~/.local/bin exists and is in PATH
+install_linux_required() {
+    log_info "Running Linux required installation..."
+
     ensure_local_bin
-    
-    # Install packages via apt (includes gh)
     install_apt_packages
-    
-    # Ensure zsh is set up and set as default shell before installing tools
     ensure_zsh
     set_default_shell
-    
-    # Download binaries from GitHub releases (parallel)
-    install_github_packages
-    
-    # Rust toolchain
-    install_rustup
+}
+
+install_linux_optional() {
+    log_info "Running Linux optional installation..."
+
+    run_optional_step "GitHub release binaries" install_github_packages
+    run_optional_step "rustup" install_rustup
 }
 
 install_apt_packages() {

@@ -69,7 +69,6 @@ create_symlinks() {
         "config/tmux.conf:$HOME/.tmux.conf"
         "config/psqlrc:$HOME/.psqlrc"
         "config/jjconfig.toml:$HOME/.jjconfig.toml"
-        "config/iterm/com.googlecode.iterm2.plist:$HOME/Library/Preferences/com.googlecode.iterm2.plist"
     )
     
     for item in "${files[@]}"; do
@@ -117,7 +116,6 @@ verify_installation() {
         "config/tmux.conf:$HOME/.tmux.conf"
         "config/psqlrc:$HOME/.psqlrc"
         "config/jjconfig.toml:$HOME/.jjconfig.toml"
-        "config/iterm/com.googlecode.iterm2.plist:$HOME/Library/Preferences/com.googlecode.iterm2.plist"
     )
     local path_checks=(
         "$HOME/.local/bin"
@@ -130,6 +128,8 @@ verify_installation() {
     local dest
     local target
     local dir
+    local expected_iterm_guid
+    local actual_iterm_guid
 
     log_info "Verifying installation..."
 
@@ -163,6 +163,21 @@ verify_installation() {
             failed=1
         fi
     done
+
+    if [[ "${OS:-}" == "macos" ]]; then
+        expected_iterm_guid="$(plutil -extract 'Default Bookmark Guid' raw -o - "$DOTFILES_DIR/config/iterm/com.googlecode.iterm2.plist" 2>/dev/null || true)"
+        actual_iterm_guid="$(defaults read com.googlecode.iterm2 'Default Bookmark Guid' 2>/dev/null || true)"
+
+        if [[ -z "$expected_iterm_guid" ]]; then
+            log_error "Could not read expected iTerm2 default profile from repo plist"
+            failed=1
+        elif [[ "$actual_iterm_guid" != "$expected_iterm_guid" ]]; then
+            log_error "iTerm2 preferences are not loaded from the repo plist"
+            failed=1
+        else
+            log_success "iTerm2 preferences loaded successfully"
+        fi
+    fi
 
     return "$failed"
 }

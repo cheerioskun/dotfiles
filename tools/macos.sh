@@ -8,6 +8,7 @@ install_macos_required() {
 
     install_homebrew
     ensure_local_bin
+    install_iterm_preferences
     install_brew_packages
     install_libpq
     ensure_zsh
@@ -69,6 +70,32 @@ install_brew_packages() {
             log_success "$pkg installed"
         fi
     done
+}
+
+install_iterm_preferences() {
+    local src="$DOTFILES_DIR/config/iterm/com.googlecode.iterm2.plist"
+    local dest="$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+    local backup
+
+    if [[ ! -f "$src" ]]; then
+        log_warn "iTerm2 preferences file is missing: $src"
+        return 0
+    fi
+
+    log_info "Importing iTerm2 preferences..."
+
+    if [[ -L "$dest" ]]; then
+        log_warn "Removing iTerm2 preference symlink; macOS preferences do not reliably load it"
+        rm "$dest"
+    elif [[ -e "$dest" ]]; then
+        backup="${dest}.backup.$(date +%Y%m%d-%H%M%S)"
+        log_warn "Backing up existing iTerm2 preferences to $backup"
+        mv "$dest" "$backup"
+    fi
+
+    defaults import com.googlecode.iterm2 "$src"
+    killall cfprefsd >/dev/null 2>&1 || true
+    log_success "Imported iTerm2 preferences. Fully quit and reopen iTerm2 to load them."
 }
 
 install_libpq() {

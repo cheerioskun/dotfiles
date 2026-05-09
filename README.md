@@ -10,7 +10,7 @@ Automatically sets up your shell environment with:
 - **Powerlevel10k** prompt (pre-configured, no wizard)
 - Essential CLI tools: `fzf`, `ripgrep`, `bat`, `fd`, `lf`, `zoxide`, `jq`, `neovim`
 - Custom aliases and functions for common tasks
-- `opencode`, `bun`, and `rustup` are installed into their own home directories and added to `PATH` by `zsh`
+- `opencode`, `bun`, `nvm`, Codex, and `rustup` are installed into user-local locations and added to `PATH` by `zsh`
 - iTerm2 preferences are imported from `config/iterm/com.googlecode.iterm2.plist`
 
 ## Quick Start
@@ -24,7 +24,7 @@ cd ~/repos/dotfiles
 The script will:
 1. Detect your OS (macOS or Linux)
 2. Install required tools via Homebrew (macOS) or apt/GitHub releases (Linux)
-3. Create symlinks for `~/.zshrc`, `~/.p10k.zsh`, `~/.tmux.conf`, `~/.psqlrc`, and `~/.jjconfig.toml`
+3. Create a managed source block in `~/.zshrc` and symlinks for `~/.p10k.zsh`, `~/.tmux.conf`, `~/.psqlrc`, and `~/.jjconfig.toml`
 4. Import the iTerm2 preferences on macOS
 5. Install zinit and TPM
 6. Set `zsh` as the default shell on both macOS and Linux when possible

@@ -20,6 +20,8 @@ install_macos_optional() {
 
     run_optional_step "rustup" install_rustup
     run_optional_step "bun" install_bun
+    run_optional_step "nvm" install_nvm
+    run_optional_step "codex" install_codex
     run_optional_step "opencode" install_opencode
     run_optional_step "weave" install_weave
 }

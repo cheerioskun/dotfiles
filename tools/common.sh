@@ -256,6 +256,47 @@ install_bun() {
     log_success "bun installed"
 }
 
+install_nvm() {
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+
+    if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+        log_info "nvm is already installed"
+    else
+        log_info "Installing nvm..."
+        if ! (set -o pipefail; curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash); then
+            log_error "nvm installation failed"
+            return 1
+        fi
+        log_success "nvm installed"
+    fi
+
+    if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+        # shellcheck disable=SC1091
+        source "$NVM_DIR/nvm.sh"
+    else
+        log_error "nvm installed but $NVM_DIR/nvm.sh is missing"
+        return 1
+    fi
+
+    if ! command_exists npm; then
+        log_info "Installing latest LTS Node.js with nvm..."
+        nvm install --lts
+    fi
+}
+
+install_codex() {
+    if command_exists codex; then
+        log_info "Codex is already installed"
+        return 0
+    fi
+
+    install_nvm
+
+    log_info "Installing Codex via npm..."
+    npm i -g @openai/codex
+    log_success "Codex installed"
+}
+
 # Install opencode (cross-platform)
 # https://opencode.ai
 install_opencode() {

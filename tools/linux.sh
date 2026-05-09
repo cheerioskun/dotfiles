@@ -18,6 +18,8 @@ install_linux_optional() {
 
     run_optional_step "GitHub release binaries" install_github_packages
     run_optional_step "rustup" install_rustup
+    run_optional_step "nvm" install_nvm
+    run_optional_step "codex" install_codex
 }
 
 install_apt_packages() {

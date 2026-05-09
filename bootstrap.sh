@@ -64,7 +64,6 @@ create_symlinks() {
     log_info "Creating symlinks..."
     
     local files=(
-        "config/zshrc:$HOME/.zshrc"
         "config/p10k.zsh:$HOME/.p10k.zsh"
         "config/tmux.conf:$HOME/.tmux.conf"
         "config/psqlrc:$HOME/.psqlrc"
@@ -95,6 +94,40 @@ create_symlinks() {
     done
 }
 
+install_zshrc_source() {
+    local dest="$HOME/.zshrc"
+    local begin="# >>> dotfiles managed zshrc >>>"
+    local end="# <<< dotfiles managed zshrc <<<"
+    local tmp
+
+    log_info "Installing zsh source block..."
+
+    if [[ -L "$dest" ]]; then
+        log_warn "Replacing zshrc symlink with a host-owned file"
+        rm "$dest"
+    fi
+
+    tmp="$(mktemp)"
+    {
+        printf '%s\n' "$begin"
+        printf 'export DOTFILES_DIR=%q\n' "$DOTFILES_DIR"
+        printf '[[ -f "$DOTFILES_DIR/config/zshrc" ]] && source "$DOTFILES_DIR/config/zshrc"\n'
+        printf '%s\n' "$end"
+        printf '\n'
+
+        if [[ -f "$dest" ]]; then
+            awk -v begin="$begin" -v end="$end" '
+                $0 == begin { skip = 1; next }
+                $0 == end { skip = 0; next }
+                !skip { print }
+            ' "$dest"
+        fi
+    } > "$tmp"
+
+    mv "$tmp" "$dest"
+    log_success "Installed zsh source block in $dest"
+}
+
 run_optional_step() {
     local label="$1"
     shift
@@ -111,7 +144,6 @@ run_optional_step() {
 verify_installation() {
     local failed=0
     local config_links=(
-        "config/zshrc:$HOME/.zshrc"
         "config/p10k.zsh:$HOME/.p10k.zsh"
         "config/tmux.conf:$HOME/.tmux.conf"
         "config/psqlrc:$HOME/.psqlrc"
@@ -130,6 +162,7 @@ verify_installation() {
     local dir
     local expected_iterm_guid
     local actual_iterm_guid
+    local expected_zsh_source
 
     log_info "Verifying installation..."
 
@@ -146,6 +179,18 @@ verify_installation() {
             failed=1
         fi
     done
+
+    expected_zsh_source='source "$DOTFILES_DIR/config/zshrc"'
+    if [[ ! -f "$HOME/.zshrc" ]]; then
+        log_error "Expected zshrc missing: $HOME/.zshrc"
+        failed=1
+    elif [[ -L "$HOME/.zshrc" ]]; then
+        log_error "Expected host-owned zshrc, found symlink: $HOME/.zshrc"
+        failed=1
+    elif ! grep -Fq "$expected_zsh_source" "$HOME/.zshrc"; then
+        log_error "Expected dotfiles source block missing from $HOME/.zshrc"
+        failed=1
+    fi
 
     if ! command -v zsh >/dev/null 2>&1; then
         log_error "zsh is not installed or not on PATH"
@@ -233,6 +278,7 @@ main() {
 
     # Link configs first so the shell baseline exists even if optional installers fail later.
     create_symlinks
+    install_zshrc_source
     
     # Run OS-specific installation
     if [[ "$OS" == "macos" ]]; then

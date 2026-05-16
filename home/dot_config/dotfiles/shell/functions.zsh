@@ -3,6 +3,18 @@ mkcd() {
   mkdir -p "$1" && cd "$1"
 }
 
+lfcd() {
+  command -v lf >/dev/null 2>&1 || { echo 'lfcd requires lf' >&2; return 1; }
+
+  local tmp dir
+  tmp="$(mktemp -t lfcd.XXXXXX)" || return 1
+  lf -last-dir-path="$tmp" "$@"
+  dir="$(<"$tmp")"
+  rm -f "$tmp"
+
+  [[ -d "$dir" && "$dir" != "$PWD" ]] && cd "$dir"
+}
+
 ff() {
   for cmd in fd fzf; do command -v "$cmd" >/dev/null 2>&1 || { echo "ff requires $cmd" >&2; return 1; }; done
   local file preview_cmd

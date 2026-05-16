@@ -1,11 +1,81 @@
+# Safer shell command defaults.
+set shell sh
+set shellopts '-eu'
+set ifs "\n"
+
+# Display.
 set hidden true
 set icons true
 set ignorecase true
 set number true
 set relativenumber true
 set preview true
+set scrolloff 8
+set cursorpreviewfmt "\033[7;2m"
 
+# Navigation.
 map gh cd ~
 map gr cd /
 map gd cd ~/Downloads
 map gp cd ~/repos
+map gc cd ~/.config
+map gt cd /tmp
+map . set hidden!
+map R reload
+
+# Open files with EDITOR for text and the platform opener for everything else.
+cmd open &{{
+    set -f
+    case $(file --mime-type -Lb "$f") in
+        text/*|application/json|application/xml|application/x-sh|inode/x-empty)
+            lf -remote "send $id \$$EDITOR \$fx"
+            ;;
+        *)
+            opener=${OPENER:-}
+            if [ -z "$opener" ]; then
+                if command -v open >/dev/null 2>&1; then opener=open
+                elif command -v xdg-open >/dev/null 2>&1; then opener=xdg-open
+                fi
+            fi
+            [ -n "$opener" ] && for file in $fx; do "$opener" "$file" >/dev/null 2>&1 & done
+            ;;
+    esac
+}}
+
+map <enter> open
+map l open
+map h up
+
+# Create directories from a prompt.
+map a :push %mkdir<space>-p<space>
+
+# Move selected files to the OS-appropriate trash directory.
+cmd trash %{{
+    set -f
+    trash=${XDG_DATA_HOME:-$HOME/.local/share}/Trash/files
+    [ "$(uname)" = Darwin ] && trash=$HOME/.Trash
+    mkdir -p "$trash"
+    for file in $fx; do mv "$file" "$trash"/; done
+}}
+map <delete> trash
+
+# Archive extraction for the common formats.
+cmd extract ${{
+    set -f
+    case "$f" in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf "$f";;
+        *.tar.gz|*.tgz) tar xzvf "$f";;
+        *.tar.xz|*.txz) tar xJvf "$f";;
+        *.tar) tar xvf "$f";;
+        *.zip) unzip "$f";;
+        *.rar) unrar x "$f";;
+        *.7z) 7z x "$f";;
+        *) printf 'no extractor configured for %s\n' "$f";;
+    esac
+}}
+map E extract
+
+# Quick shell escape and execute-current-file helpers.
+map ` !true
+map x $$f
+map X !$f

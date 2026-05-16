@@ -16,5 +16,4 @@ fi
 
 alias gb='git checkout $(git for-each-ref --sort=-committerdate --format="%(refname:short)" refs/heads/ | fzf)'
 alias tat='tmux attach'
-alias lf='lfcd'
 alias zshconfig='${EDITOR:-vim} ~/.zshrc'

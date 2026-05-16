@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROFILES="core,dev,ai"
+OS="$(uname -s)"
+
+log() { printf '[packages] %s\n' "$*"; }
+warn() { printf '[packages] warn: %s\n' "$*" >&2; }
+
+usage() {
+  cat <<'EOF'
+usage: scripts/install-packages [--profiles core,dev,ai,macos-gui]
+
+Profiles:
+  core       shell + daily CLI tools
+  dev        language/toolchain/dev extras
+  ai         pi coding agent
+  macos-gui  iTerm preferences and macOS GUI-ish extras
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profiles) PROFILES="${2:?missing profiles}"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) warn "unknown arg: $1"; usage; exit 2 ;;
+  esac
+done
+
+has_profile() {
+  case ",$PROFILES," in *",$1,"*) return 0 ;; *) return 1 ;; esac
+}
+
+command_exists() { command -v "$1" >/dev/null 2>&1; }
+
+run_privileged() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"
+  elif command_exists sudo; then
+    sudo "$@"
+  else
+    warn "sudo is required for: $*"
+    return 1
+  fi
+}
+
+path_prepend_if_dir() {
+  [[ -d "$1" ]] || return 0
+  case ":$PATH:" in *":$1:"*) ;; *) export PATH="$1:$PATH" ;; esac
+}
+
+ensure_homebrew() {
+  if command_exists brew; then return 0; fi
+  log "installing Homebrew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
+  [[ -x /usr/local/bin/brew ]] && eval "$(/usr/local/bin/brew shellenv)"
+}
+
+brew_install() {
+  ensure_homebrew
+  local missing=()
+  local pkg
+  for pkg in "$@"; do
+    brew list "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  done
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log "brew install: ${missing[*]}"
+    brew install "${missing[@]}"
+  fi
+}
+
+apt_install() {
+  local missing=()
+  local pkg
+  export DEBIAN_FRONTEND=noninteractive
+  run_privileged env DEBIAN_FRONTEND=noninteractive apt-get update
+  for pkg in "$@"; do
+    dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  done
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log "apt install: ${missing[*]}"
+    run_privileged env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
+  fi
+}
+
+set_default_shell() {
+  command_exists zsh || return 0
+  local zsh_path user_shell
+  zsh_path="$(command -v zsh)"
+  user_shell="${SHELL:-}"
+
+  if [[ "$OS" == Darwin ]]; then
+    user_shell="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}' || true)"
+  elif command_exists getent; then
+    user_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+  fi
+
+  [[ "$user_shell" == "$zsh_path" ]] && return 0
+  log "setting default shell to $zsh_path"
+  grep -qxF "$zsh_path" /etc/shells 2>/dev/null || printf '%s\n' "$zsh_path" | run_privileged tee -a /etc/shells >/dev/null
+  run_privileged chsh -s "$zsh_path" "$(id -un)" || warn "could not change default shell"
+}
+
+install_zinit() {
+  local dest="$HOME/.local/share/zinit/zinit.git"
+  [[ -d "$dest" ]] && return 0
+  log "installing zinit"
+  mkdir -p "$(dirname "$dest")"
+  git clone https://github.com/zdharma-continuum/zinit.git "$dest"
+}
+
+install_tpm() {
+  local dest="$HOME/.tmux/plugins/tpm"
+  [[ -d "$dest" ]] && return 0
+  log "installing tmux plugin manager"
+  git clone https://github.com/tmux-plugins/tpm "$dest"
+}
+
+install_nvm() {
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  log "checking nvm in $NVM_DIR"
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    log "installing nvm"
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | PROFILE=/dev/null bash
+    log "nvm installer finished"
+  fi
+
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    log "loading nvm"
+    # shellcheck disable=SC1091
+    source "$NVM_DIR/nvm.sh"
+    log "loaded nvm: $(nvm --version)"
+  else
+    warn "nvm.sh was not found after install"
+    return 1
+  fi
+
+  if command_exists node; then
+    log "node already installed: $(node --version)"
+  else
+    log "installing latest LTS node with nvm"
+    nvm install --lts
+    log "node install finished: $(node --version)"
+  fi
+
+  if command_exists npm; then
+    log "npm available: $(npm --version)"
+  else
+    warn "npm not found after node install"
+    return 1
+  fi
+}
+
+install_rustup() {
+  command_exists cargo && return 0
+  log "installing rustup"
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  path_prepend_if_dir "$HOME/.cargo/bin"
+}
+
+get_arch() {
+  case "$(uname -m)" in
+    x86_64) echo amd64 ;;
+    aarch64|arm64) echo arm64 ;;
+    *) echo unknown ;;
+  esac
+}
+
+install_github_tar_binary() {
+  local cmd="$1"
+  local url="$2"
+  local binary_path="${3:-$cmd}"
+  local tmp resolved
+
+  command_exists "$cmd" && return 0
+  log "installing $cmd from GitHub release"
+  mkdir -p "$HOME/.local/bin"
+  tmp="$(mktemp -d)"
+  (
+    cd "$tmp"
+    curl -fsSL "$url" -o archive.tar.gz
+    tar -xzf archive.tar.gz
+  )
+  resolved="$tmp/$binary_path"
+  if [[ ! -f "$resolved" ]]; then
+    resolved="$(find "$tmp" -type f -name "$(basename "$binary_path")" | head -n 1)"
+  fi
+  [[ -f "$resolved" ]] || { rm -rf "$tmp"; warn "could not find $binary_path in $url"; return 1; }
+  mv "$resolved" "$HOME/.local/bin/$cmd"
+  chmod +x "$HOME/.local/bin/$cmd"
+  rm -rf "$tmp"
+}
+
+install_jj_linux() {
+  local arch target
+  arch="$(get_arch)"
+  case "$arch" in
+    amd64) target="x86_64-unknown-linux-musl" ;;
+    arm64) target="aarch64-unknown-linux-musl" ;;
+    *) warn "unsupported architecture for jj: $arch"; return 1 ;;
+  esac
+  install_github_tar_binary jj "https://github.com/jj-vcs/jj/releases/download/v0.38.0/jj-v0.38.0-${target}.tar.gz"
+}
+
+install_pi() {
+  command_exists pi && return 0
+  install_nvm
+  log "installing pi"
+  npm install -g @earendil-works/pi-coding-agent
+}
+
+install_iterm_preferences() {
+  local src
+  src="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/assets/com.googlecode.iterm2.plist"
+  [[ -f "$src" ]] || return 0
+  log "importing iTerm2 preferences"
+  defaults import com.googlecode.iterm2 "$src"
+  killall cfprefsd >/dev/null 2>&1 || true
+}
+
+install_core_macos() {
+  brew_install zsh fzf ripgrep bat fd lf zoxide jq neovim tmux direnv git-delta jj less curl git unzip ca-certificates libpq
+  brew link --force libpq >/dev/null 2>&1 || true
+  install_zinit
+  install_tpm
+  set_default_shell
+}
+
+install_core_linux() {
+  apt_install ca-certificates curl git zsh ripgrep bat fd-find lf fzf zoxide jq neovim tmux direnv postgresql-client less unzip
+  mkdir -p "$HOME/.local/bin"
+  command_exists batcat && ! command_exists bat && ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+  command_exists fdfind && ! command_exists fd && ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+  install_jj_linux || warn "jj install failed"
+  install_zinit
+  install_tpm
+  set_default_shell
+}
+
+install_dev_macos() {
+  brew_install gh go
+  install_rustup
+  install_nvm
+}
+
+install_dev_linux() {
+  apt_install gh golang-go
+  install_rustup
+  install_nvm
+}
+
+if has_profile core; then
+  if [[ "$OS" == Darwin ]]; then install_core_macos; else install_core_linux; fi
+fi
+
+if has_profile dev; then
+  if [[ "$OS" == Darwin ]]; then install_dev_macos; else install_dev_linux; fi
+fi
+
+if has_profile ai; then
+  install_pi
+fi
+
+if has_profile macos-gui && [[ "$OS" == Darwin ]]; then
+  brew_install iproute2mac
+  install_iterm_preferences
+fi
+
+log "complete"

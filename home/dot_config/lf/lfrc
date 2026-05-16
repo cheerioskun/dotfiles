@@ -1,0 +1,11 @@
+set hidden true
+set icons true
+set ignorecase true
+set number true
+set relativenumber true
+set preview true
+
+map gh cd ~
+map gr cd /
+map gd cd ~/Downloads
+map gp cd ~/repos

@@ -1,0 +1,31 @@
+# chezmoi-managed zshrc
+
+# Powerlevel10k instant prompt. Keep near the top.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export DOTFILES_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
+
+source_if_exists() {
+  [[ -f "$1" ]] && source "$1"
+}
+
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/path.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/plugins.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/tools.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/aliases.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/functions.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/bindings.zsh"
+source_if_exists "$DOTFILES_CONFIG_HOME/shell/history.zsh"
+
+if command -v nvim >/dev/null 2>&1; then
+  export EDITOR=nvim
+  export VISUAL=nvim
+else
+  export EDITOR=vim
+  export VISUAL=vim
+fi
+
+[[ ! -f "$HOME/.p10k.zsh" ]] || source "$HOME/.p10k.zsh"
+[[ ! -f "$HOME/.zshrc.local" ]] || source "$HOME/.zshrc.local"

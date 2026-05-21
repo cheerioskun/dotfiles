@@ -136,13 +136,17 @@ install_nvm() {
     return 1
   fi
 
-  if command_exists node; then
-    log "node already installed: $(node --version)"
+  # Check for NVM-managed node specifically; command_exists node would match Homebrew node
+  if nvm ls --no-colors 2>/dev/null | grep -qE '^ +v[0-9]'; then
+    log "nvm node already installed: $(nvm current)"
   else
     log "installing latest LTS node with nvm"
     nvm install --lts
     log "node install finished: $(node --version)"
   fi
+
+  # Always ensure a default alias so NVM takes precedence over any system node
+  nvm alias default node >/dev/null 2>&1 || true
 
   if command_exists npm; then
     log "npm available: $(npm --version)"

@@ -141,7 +141,6 @@ function requireDialogActive() {
 }
 
 function pushEvent(kind: "say" | "ask", text: string, mood?: Mood, title?: string): DialogEvent {
-  const wasEmpty = state.events.length === 0;
   const event: DialogEvent = {
     id: state.nextId++,
     kind,
@@ -150,7 +149,7 @@ function pushEvent(kind: "say" | "ask", text: string, mood?: Mood, title?: strin
     title,
   };
   state.events.push(event);
-  if (wasEmpty) state.index = 0;
+  state.index = state.events.length - 1;
   return event;
 }
 

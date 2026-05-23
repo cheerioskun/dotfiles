@@ -149,7 +149,8 @@ function pushEvent(kind: "say" | "ask", text: string, mood?: Mood, title?: strin
     title,
   };
   state.events.push(event);
-  state.index = state.events.length - 1;
+  // Don't advance the viewing index — user browses manually.
+  // When the array was empty index is already 0, so count updates naturally.
   return event;
 }
 

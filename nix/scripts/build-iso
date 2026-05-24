@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+out="${DOTFILES_ISO_OUT:-$here/result-iso}"
+
+log() { printf '[nix-iso] %s\n' "$*"; }
+
+current_system="$(nix eval --impure --raw --expr 'builtins.currentSystem' 2>/dev/null || echo unknown)"
+case "$current_system" in
+  aarch64-*) default_target_system="aarch64-linux" ;;
+  *) default_target_system="x86_64-linux" ;;
+esac
+
+target_system="${DOTFILES_ISO_SYSTEM:-$default_target_system}"
+case "$target_system" in
+  x86_64-linux) config_name="iso-x86_64" ;;
+  aarch64-linux) config_name="iso-aarch64" ;;
+  *) log "unsupported ISO target system: $target_system" >&2; exit 2 ;;
+esac
+
+nix_args=()
+if [[ -n "${DOTFILES_NIX_BUILDERS:-}" ]]; then
+  nix_args+=(--builders "$DOTFILES_NIX_BUILDERS" --builders-use-substitutes)
+fi
+
+has_linux_builder=false
+if [[ -n "${DOTFILES_NIX_BUILDERS:-}" ]] || nix config show builders 2>/dev/null | grep -q -- "$target_system"; then
+  has_linux_builder=true
+fi
+for arg in "$@"; do
+  case "$arg" in
+    --builders|--builders=*|--option)
+      has_linux_builder=true
+      ;;
+  esac
+done
+
+if [[ "$current_system" != "$target_system" && "$has_linux_builder" != true && "${DOTFILES_SKIP_PLATFORM_GUARD:-}" != 1 ]]; then
+  cat >&2 <<EOF
+[nix-iso] this ISO is a $target_system NixOS image, but this machine is $current_system.
+[nix-iso] macOS cannot locally build Linux NixOS derivations, even when the CPU architecture matches.
+[nix-iso]
+[nix-iso] Fix: run this inside an existing $target_system VM/host, or provide a Linux remote builder, e.g.
+[nix-iso]   DOTFILES_NIX_BUILDERS='ssh-ng://nixos-builder $target_system - 4 1 kvm,big-parallel' ./nix/scripts/build-iso
+[nix-iso]
+[nix-iso] For Apple Silicon UTM, boot an official aarch64-linux NixOS image first, clone this repo, then build there.
+[nix-iso]
+[nix-iso] If your Linux builder is already configured in nix.conf but not detected, rerun with:
+[nix-iso]   DOTFILES_SKIP_PLATFORM_GUARD=1 ./nix/scripts/build-iso
+EOF
+  exit 1
+fi
+
+log "building Hyprland live ISO for $target_system"
+log "config: $config_name"
+log "host:   $current_system"
+log "flake:  $here"
+log "out:    $out"
+
+nix build "${nix_args[@]}" "$here#nixosConfigurations.$config_name.config.system.build.isoImage" -o "$out" "$@"
+
+iso_path="$(find -L "$out/iso" -maxdepth 1 -type f -name '*.iso' | head -n 1 || true)"
+if [[ -n "$iso_path" ]]; then
+  log "iso: $iso_path"
+else
+  log "built, but no .iso was found under $out/iso"
+fi

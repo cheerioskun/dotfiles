@@ -32,4 +32,4 @@ Local machine overrides belong in `~/.zshrc.local`.
 
 Tracked pi config includes settings and global extensions. Pi auth and sessions are intentionally not managed.
 
-The `ai` profile installs agent skills during bootstrap instead of vendoring them in chezmoi. Add preferred `skills add` argument lines to `scripts/install-skills`; bootstrap appends `--global --yes`.
+The `ai` profile installs agent skills during bootstrap instead of vendoring them in chezmoi. Add preferred `skills add` argument lines to `scripts/install-skills`; bootstrap appends `--yes`.

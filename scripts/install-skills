@@ -17,5 +17,5 @@ fi
 for install in "${skill_installs[@]}"; do
   read -r -a args <<< "$install"
   log "installing skill: $install"
-  npx --yes skills add "${args[@]}" --global --yes
+  npx --yes skills add "${args[@]}" --yes
 done

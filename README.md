@@ -32,4 +32,4 @@ Local machine overrides belong in `~/.zshrc.local`.
 
 Tracked pi config includes settings and global extensions. Pi auth and sessions are intentionally not managed.
 
-Agent skills are installed from `https://github.com/cheerioskun/skills` during bootstrap instead of being vendored in chezmoi.
+The `ai` profile installs agent skills during bootstrap instead of vendoring them in chezmoi. Add preferred skill package targets to `scripts/install-skills`; each entry is passed directly to `npx skills add`.

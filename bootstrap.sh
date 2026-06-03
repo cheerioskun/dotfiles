@@ -22,6 +22,10 @@ path_prepend() {
   esac
 }
 
+has_profile() {
+  case ",$PROFILES," in *",$1,"*) return 0 ;; *) return 1 ;; esac
+}
+
 install_chezmoi() {
   if command -v chezmoi >/dev/null 2>&1; then
     CHEZMOI_BIN="$(command -v chezmoi)"
@@ -56,6 +60,11 @@ install_packages() {
 install_skills() {
   if [[ "${DOTFILES_SKIP_SKILLS:-0}" == "1" ]]; then
     log "skipping skill installation"
+    return
+  fi
+
+  if ! has_profile ai; then
+    log "skipping skill installation: ai profile is not selected"
     return
   fi
 

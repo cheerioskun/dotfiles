@@ -3,12 +3,10 @@ set -euo pipefail
 
 log() { printf '[dotfiles] %s\n' "$*"; }
 
-SKILLS_REPO="${SKILLS_REPO:-https://github.com/cheerioskun/skills}"
-
-skills=(
-  explainer
-  gatech-advisor
-  wayfarer
+skill_packages=(
+  cheerioskun/explainer
+  cheerioskun/gatech-advisor
+  cheerioskun/wayfarer
 )
 
 if ! command -v npx >/dev/null 2>&1; then
@@ -16,7 +14,7 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 0
 fi
 
-for skill in "${skills[@]}"; do
-  log "installing skill: $skill"
-  npx --yes skills add "$SKILLS_REPO/tree/main/$skill"
+for package in "${skill_packages[@]}"; do
+  log "installing skill package: $package"
+  npx --yes skills add "$package"
 done

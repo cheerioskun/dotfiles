@@ -3,10 +3,10 @@ set -euo pipefail
 
 log() { printf '[dotfiles] %s\n' "$*"; }
 
-skill_packages=(
-  cheerioskun/explainer
-  cheerioskun/gatech-advisor
-  cheerioskun/wayfarer
+skill_installs=(
+  "https://github.com/cheerioskun/skills --skill explainer"
+  "https://github.com/cheerioskun/skills --skill gatech-advisor"
+  "https://github.com/cheerioskun/skills --skill wayfarer"
 )
 
 if ! command -v npx >/dev/null 2>&1; then
@@ -14,7 +14,8 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 0
 fi
 
-for package in "${skill_packages[@]}"; do
-  log "installing skill package: $package"
-  npx --yes skills add "$package"
+for install in "${skill_installs[@]}"; do
+  read -r -a args <<< "$install"
+  log "installing skill: $install"
+  npx --yes skills add "${args[@]}" --global --yes
 done

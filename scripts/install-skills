@@ -3,6 +3,8 @@ set -euo pipefail
 
 log() { printf '[dotfiles] %s\n' "$*"; }
 
+SKILLS_INSTALL_DIR="${SKILLS_INSTALL_DIR:-$HOME}"
+
 skill_installs=(
   "https://github.com/cheerioskun/skills --skill explainer"
   "https://github.com/cheerioskun/skills --skill gatech-advisor"
@@ -14,8 +16,13 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 0
 fi
 
+log "installing skills from directory: $SKILLS_INSTALL_DIR"
+
 for install in "${skill_installs[@]}"; do
   read -r -a args <<< "$install"
   log "installing skill: $install"
-  npx --yes skills add "${args[@]}" --yes
+  (
+    cd "$SKILLS_INSTALL_DIR"
+    npx --yes skills add "${args[@]}" --yes
+  )
 done

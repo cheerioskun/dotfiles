@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() { printf '[dotfiles] %s\n' "$*"; }
+
+SKILLS_REPO="${SKILLS_REPO:-https://github.com/cheerioskun/skills}"
+
+skills=(
+  explainer
+  gatech-advisor
+  wayfarer
+)
+
+if ! command -v npx >/dev/null 2>&1; then
+  log "skipping skill install: npx is not available"
+  exit 0
+fi
+
+for skill in "${skills[@]}"; do
+  log "installing skill: $skill"
+  npx --yes skills add "$SKILLS_REPO/tree/main/$skill"
+done

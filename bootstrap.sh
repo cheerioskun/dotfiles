@@ -53,11 +53,21 @@ install_packages() {
   "$DOTFILES_DIR/scripts/install-packages" --profiles "$PROFILES"
 }
 
+install_skills() {
+  if [[ "${DOTFILES_SKIP_SKILLS:-0}" == "1" ]]; then
+    log "skipping skill installation"
+    return
+  fi
+
+  "$DOTFILES_DIR/scripts/install-skills"
+}
+
 main() {
   ensure_not_root
   install_chezmoi
   apply_dotfiles
   install_packages
+  install_skills
   log "done. restart your shell or run: exec zsh -l"
 }
 

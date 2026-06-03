@@ -25,8 +25,11 @@ By default this applies the chezmoi-managed files and installs the `core,dev,ai`
 DOTFILES_PROFILES=core ./bootstrap.sh
 DOTFILES_PROFILES=core,dev,ai,macos-gui ./bootstrap.sh
 DOTFILES_SKIP_PACKAGES=1 ./bootstrap.sh
+DOTFILES_SKIP_SKILLS=1 ./bootstrap.sh
 ```
 
 Local machine overrides belong in `~/.zshrc.local`.
 
 Tracked pi config includes settings and global extensions. Pi auth and sessions are intentionally not managed.
+
+Agent skills are installed from `https://github.com/cheerioskun/skills` during bootstrap instead of being vendored in chezmoi.

@@ -1,0 +1,21 @@
+<snippet>
+<content><![CDATA[#include<bits/stdc++.h>
+#define f first
+#define s second
+#define MOD 1000000007L
+typedef long long int ll;
+typedef vector<int> vi;
+typedef pair<int, int> pii;
+using namespace std;
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    $0
+}
+]]></content>
+<tabTrigger>cpp</tabTrigger>
+<scope>source.c++</scope>
+<description>C++ competitive programming boilerplate</description>
+</snippet>

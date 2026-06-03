@@ -70,6 +70,19 @@ brew_install() {
   fi
 }
 
+brew_install_cask() {
+  ensure_homebrew
+  local missing=()
+  local pkg
+  for pkg in "$@"; do
+    brew list --cask "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+  done
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log "brew install --cask: ${missing[*]}"
+    brew install --cask "${missing[@]}"
+  fi
+}
+
 apt_install() {
   local missing=()
   local pkg
@@ -163,6 +176,16 @@ install_rustup() {
   path_prepend_if_dir "$HOME/.cargo/bin"
 }
 
+install_rust_analyzer() {
+  if command_exists rustup; then
+    rustup component add rust-analyzer
+  elif [[ "$OS" == Darwin ]]; then
+    brew_install rust-analyzer
+  else
+    warn "rustup is required to install rust-analyzer"
+  fi
+}
+
 get_arch() {
   case "$(uname -m)" in
     x86_64) echo amd64 ;;
@@ -223,6 +246,27 @@ install_iterm_preferences() {
   killall cfprefsd >/dev/null 2>&1 || true
 }
 
+install_sublime_package_control() {
+  local installed_packages package_control
+  installed_packages="$HOME/Library/Application Support/Sublime Text/Installed Packages"
+  package_control="$installed_packages/Package Control.sublime-package"
+  [[ -f "$package_control" ]] && return 0
+
+  log "installing Sublime Package Control"
+  mkdir -p "$installed_packages"
+  curl -fsSL "https://packagecontrol.io/Package%20Control.sublime-package" -o "$package_control"
+}
+
+install_sublime_lsp_fallback() {
+  local lsp_dir
+  lsp_dir="$HOME/Library/Application Support/Sublime Text/Packages/LSP"
+  [[ -d "$lsp_dir" ]] && return 0
+
+  log "installing Sublime LSP package fallback"
+  mkdir -p "$(dirname "$lsp_dir")"
+  git clone https://github.com/sublimelsp/LSP.git "$lsp_dir"
+}
+
 install_core_macos() {
   brew_install zsh fzf ripgrep bat fd lf zoxide jq neovim tmux direnv git-delta jj less curl git unzip ca-certificates libpq
   brew link --force libpq >/dev/null 2>&1 || true
@@ -245,12 +289,14 @@ install_core_linux() {
 install_dev_macos() {
   brew_install gh go
   install_rustup
+  install_rust_analyzer
   install_nvm
 }
 
 install_dev_linux() {
   apt_install gh golang-go
   install_rustup
+  install_rust_analyzer
   install_nvm
 }
 
@@ -267,6 +313,9 @@ if has_profile ai; then
 fi
 
 if has_profile macos-gui && [[ "$OS" == Darwin ]]; then
+  brew_install_cask sublime-text
+  install_sublime_package_control
+  install_sublime_lsp_fallback
   brew_install iproute2mac
   install_iterm_preferences
 fi

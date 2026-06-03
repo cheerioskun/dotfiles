@@ -1,0 +1,12 @@
+{
+  "installed_packages": [
+    "LSP",
+    "LSP-clangd",
+    "LSP-rust-analyzer",
+    "Package Control"
+  ],
+  "bootstrapped": true,
+  "in_process_packages":
+  [
+  ],
+}

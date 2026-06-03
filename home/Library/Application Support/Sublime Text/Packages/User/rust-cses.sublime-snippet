@@ -1,0 +1,15 @@
+<snippet>
+<content><![CDATA[use std::io::{self, Read};
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input).unwrap();
+    let mut it = input.split_whitespace();
+
+    $0
+}
+]]></content>
+<tabTrigger>cses</tabTrigger>
+<scope>source.rust</scope>
+<description>Rust CSES input boilerplate</description>
+</snippet>

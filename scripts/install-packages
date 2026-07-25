@@ -92,12 +92,23 @@ brew_install_cask() {
 
 apt_install() {
   local missing=()
+  local unavailable=()
   local pkg
   export DEBIAN_FRONTEND=noninteractive
   run_privileged env DEBIAN_FRONTEND=noninteractive apt-get update
   for pkg in "$@"; do
-    dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+    if dpkg -s "$pkg" >/dev/null 2>&1; then
+      continue
+    fi
+    if apt-cache show --no-all-versions "$pkg" >/dev/null 2>&1; then
+      missing+=("$pkg")
+    else
+      unavailable+=("$pkg")
+    fi
   done
+  if [[ ${#unavailable[@]} -gt 0 ]]; then
+    warn "skipping unavailable apt packages: ${unavailable[*]}"
+  fi
   if [[ ${#missing[@]} -gt 0 ]]; then
     log "apt install: ${missing[*]}"
     run_privileged env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
@@ -207,9 +218,10 @@ install_github_tar_binary() {
   local binary_path="${3:-$cmd}"
   local tmp resolved
 
+  mkdir -p "$HOME/.local/bin"
+  path_prepend_if_dir "$HOME/.local/bin"
   command_exists "$cmd" && return 0
   log "installing $cmd from GitHub release"
-  mkdir -p "$HOME/.local/bin"
   tmp="$(mktemp -d)"
   (
     cd "$tmp"
@@ -235,6 +247,16 @@ install_jj_linux() {
     *) warn "unsupported architecture for jj: $arch"; return 1 ;;
   esac
   install_github_tar_binary jj "https://github.com/jj-vcs/jj/releases/download/v0.38.0/jj-v0.38.0-${target}.tar.gz"
+}
+
+install_lf_linux() {
+  local arch
+  arch="$(get_arch)"
+  case "$arch" in
+    amd64|arm64) ;;
+    *) warn "unsupported architecture for lf: $arch"; return 1 ;;
+  esac
+  install_github_tar_binary lf "https://github.com/gokcehan/lf/releases/latest/download/lf-linux-${arch}.tar.gz"
 }
 
 install_pi() {
@@ -283,10 +305,11 @@ install_core_macos() {
 }
 
 install_core_linux() {
-  apt_install ca-certificates curl git zsh ripgrep bat fd-find lf fzf zoxide jq neovim tmux direnv postgresql-client less unzip
+  apt_install ca-certificates curl git zsh ripgrep bat fd-find fzf zoxide jq neovim tmux direnv postgresql-client less unzip
   mkdir -p "$HOME/.local/bin"
   command_exists batcat && ! command_exists bat && ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
   command_exists fdfind && ! command_exists fd && ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+  install_lf_linux || warn "lf install failed"
   install_jj_linux || warn "jj install failed"
   install_zinit
   install_tpm

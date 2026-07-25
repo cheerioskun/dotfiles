@@ -1,8 +1,0 @@
-[user]
-# name = "Your Name"
-# email = "you@example.com"
-
-[ui]
-pager = "less -FRX"
-diff-editor = ":builtin"
-default-command = "log"

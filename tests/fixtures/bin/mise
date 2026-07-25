@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{
+  printf 'mise'
+  printf '\t%s' "$@"
+  printf '\n'
+} >> "${TOOL_LOG:?}"

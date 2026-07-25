@@ -34,4 +34,4 @@ Tracked pi config includes settings and global extensions. Pi auth and sessions 
 
 The `ai` profile installs agent skills during bootstrap instead of vendoring them in chezmoi. Add preferred `skills add` argument lines to `scripts/install-skills`; bootstrap runs them from `$HOME` and appends `--yes`.
 
-Tracked Sublime Text config lives under `home/Library/Application Support/Sublime Text/Packages/User/`. The `macos-gui` profile installs Sublime Text, while the `dev` profile ensures Rust analyzer is available for the Sublime LSP setup.
+Tracked Sublime Text config lives under `home/Library/Application Support/Sublime Text/Packages/User/`. The `macos-gui` profile installs Sublime Text, Ghostty, and JetBrainsMono Nerd Font, while the `dev` profile ensures Rust analyzer is available for the Sublime LSP setup. Ghostty uses the tracked Catppuccin themes and keyboard-first config under `home/dot_config/ghostty/`.

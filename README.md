@@ -4,7 +4,7 @@ One personal environment for Apple Silicon macOS and x86_64 Ubuntu, expressed as
 
 The ownership boundaries are intentionally boring:
 
-- Determinate installs and maintains Nix.
+- Determinate installs and maintains Nix (native package on macOS, shell installer on Linux).
 - nix-darwin owns the Mac system, fonts, and the minimal Homebrew boundary.
 - Home Manager owns user packages and configuration on both platforms.
 - mise owns Node, Go, and Rust versions.
@@ -27,7 +27,9 @@ Clone the repository as the `hx` user, inspect the cleanup list printed by the s
 
 The bootstrap is deliberately destructive toward paths owned by older versions of this repository. It requires a typed confirmation; disposable test machines can use `--yes`.
 
-It builds the selected configuration before deleting anything, removes only its explicit allowlist, installs or repairs Determinate Nix, activates the flake, and synchronizes mise/uv/npm-managed tools. It preserves Modal and Pi authentication, Pi sessions, SSH and Git state, `.zshrc.local`, and unrelated home files.
+It installs or repairs Determinate Nix, builds the selected configuration before deleting anything, removes only its explicit allowlist, activates the flake, and synchronizes mise/uv/npm-managed tools. It preserves Modal and Pi authentication, Pi sessions, SSH and Git state, `.zshrc.local`, and unrelated home files.
+
+Every run saves its complete output to `~/Library/Logs/dotfiles/` on macOS or `${XDG_STATE_HOME:-~/.local/state}/dotfiles/` on Linux. The log path is printed at startup and on exit.
 
 ## Updating
 

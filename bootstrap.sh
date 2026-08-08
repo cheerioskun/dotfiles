@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST=""
 FRESH=0
 ASSUME_YES=0
+LOG_FILE=""
 
 log() {
   printf '[bootstrap] %s\n' "$*"
@@ -13,6 +14,37 @@ log() {
 die() {
   printf '[bootstrap] error: %s\n' "$*" >&2
   exit 1
+}
+
+finish_logging() {
+  local status=$?
+  if [[ -n "$LOG_FILE" ]]; then
+    if [[ "$status" -eq 0 ]]; then
+      log "log saved to $LOG_FILE"
+    else
+      log "failed with exit status $status; log saved to $LOG_FILE" >&2
+    fi
+  fi
+  return "$status"
+}
+
+setup_logging() {
+  local log_dir timestamp
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    log_dir="$HOME/Library/Logs/dotfiles"
+  else
+    log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles"
+  fi
+
+  mkdir -p "$log_dir"
+  chmod 700 "$log_dir"
+  timestamp="$(date '+%Y%m%d-%H%M%S')"
+  LOG_FILE="$log_dir/bootstrap-$timestamp-$$.log"
+  touch "$LOG_FILE"
+  chmod 600 "$LOG_FILE"
+  exec > >(tee -a "$LOG_FILE") 2>&1
+  trap finish_logging EXIT
+  log "logging to $LOG_FILE"
 }
 
 usage() {
@@ -227,6 +259,15 @@ detect_unsupported_nix() {
     return
   fi
 
+  # A failed official install can leave its daemon, APFS volume/fstab entry, or
+  # mount point behind before it has written the receipt. Let the official
+  # installer retry rather than misclassifying that state as another Nix.
+  if command -v determinate-nixd >/dev/null 2>&1 ||
+    grep -Fq 'Added by the Determinate Nix Installer' /etc/fstab 2>/dev/null; then
+    log "an incomplete Determinate Nix installation was found; retrying the official installer"
+    return
+  fi
+
   if command -v nix >/dev/null 2>&1 || [[ -e /nix ]]; then
     die "an existing non-Determinate Nix installation was found; remove it explicitly before running this bootstrap"
   fi
@@ -276,7 +317,7 @@ load_nix() {
 }
 
 ensure_determinate_nix() {
-  local nixd
+  local nixd pkg_dir pkg_file
   if [[ -x /nix/nix-installer && -f /nix/receipt.json ]]; then
     log "repairing the existing Determinate Nix installation"
     sudo /nix/nix-installer repair --no-confirm
@@ -293,10 +334,33 @@ ensure_determinate_nix() {
   command -v curl >/dev/null 2>&1 ||
     die "curl is required to download the Determinate Nix installer"
 
-  log "installing Determinate Nix with the official installer"
-  curl --proto '=https' --tlsv1.2 -sSf -L \
-    https://install.determinate.systems/nix |
-    sh -s -- install --no-confirm
+  if [[ "$HOST" == "macbook" ]]; then
+    # Determinate recommends its native package on macOS. Unlike the shell
+    # installer, the package repairs a missing synthetic /nix mount point and
+    # other partial APFS state seen on fresh macOS installations.
+    pkg_dir="$(mktemp -d)"
+    pkg_file="$pkg_dir/Determinate.pkg"
+    log "downloading the official Determinate Nix macOS package"
+    if ! curl --proto '=https' --tlsv1.2 -sSf -L \
+      https://install.determinate.systems/determinate-pkg/stable/Universal \
+      -o "$pkg_file"; then
+      rm -rf -- "$pkg_dir"
+      die "could not download the Determinate Nix macOS package"
+    fi
+    log "installing Determinate Nix with the official macOS package"
+    if ! sudo /usr/sbin/installer -pkg "$pkg_file" -target /; then
+      rm -rf -- "$pkg_dir"
+      die "Determinate Nix package installation failed; diagnostics are in $LOG_FILE"
+    fi
+    rm -rf -- "$pkg_dir"
+  else
+    log "installing Determinate Nix with the official shell installer"
+    if ! curl --proto '=https' --tlsv1.2 -sSf -L \
+      https://install.determinate.systems/nix |
+      sh -s -- install --no-confirm; then
+      die "Determinate Nix installation failed; diagnostics are in $LOG_FILE"
+    fi
+  fi
   load_nix
 }
 
@@ -317,13 +381,47 @@ build_configuration() {
   esac
 }
 
+prepare_darwin_etc() {
+  local path
+  [[ "$HOST" == "macbook" ]] || return 0
+
+  path=/etc/nix/nix.custom.conf
+  [[ -e "$path" && ! -L "$path" ]] || return 0
+
+  # A fresh Determinate package writes a comments-only placeholder. nix-darwin
+  # deliberately refuses to replace unknown /etc files. Remove only that exact
+  # empty placeholder; activation immediately replaces it with the managed file.
+  if ! grep -Fq 'Written by https://github.com/DeterminateSystems/nix-installer' "$path" ||
+    ! awk 'NF && $0 !~ /^[[:space:]]*#/ { exit 1 }' "$path"; then
+    die "$path contains custom settings; preserve or migrate them before activation"
+  fi
+
+  log "removing Determinate's empty nix.custom.conf placeholder"
+  sudo rm "$path"
+}
+
+prepare_darwin_login_shell() {
+  local current_shell username
+  [[ "$HOST" == "macbook" ]] || return 0
+  username="$(id -un)"
+  current_shell="$(dscl . -read "/Users/$username" UserShell 2>/dev/null | awk '{ print $2 }')"
+
+  # The old bootstrap selected Homebrew zsh. Move to macOS's stable zsh before
+  # nix-darwin removes undeclared Homebrew formulae; activation then selects the
+  # Nix-managed zsh declared in modules/darwin/default.nix.
+  if [[ "$current_shell" == "/opt/homebrew/bin/zsh" ]]; then
+    log "temporarily moving the login shell from Homebrew zsh to /bin/zsh"
+    sudo dscl . -create "/Users/$username" UserShell /bin/zsh
+  fi
+}
+
 apply_configuration() {
   local nix_bin
   case "$HOST" in
     macbook)
       log "switching nix-darwin configuration macbook"
       nix_bin="$(command -v nix)"
-      sudo "$nix_bin" run "$REPO_ROOT#darwin-rebuild" -- \
+      sudo env HOME=/var/root "$nix_bin" run "$REPO_ROOT#darwin-rebuild" -- \
         switch --flake "$REPO_ROOT#macbook"
       ;;
     ubuntu)
@@ -379,6 +477,8 @@ main() {
   parse_args "$@"
   ensure_not_root
   validate_home
+  setup_logging
+  log "starting host=$HOST repository=$REPO_ROOT"
   ensure_platform_matches_host
   ensure_repo
   detect_unsupported_nix
@@ -388,6 +488,8 @@ main() {
   ensure_ubuntu_prerequisites
   ensure_determinate_nix
   build_configuration
+  prepare_darwin_etc
+  prepare_darwin_login_shell
   remove_managed_paths
   apply_configuration
   load_activated_path

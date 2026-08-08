@@ -23,9 +23,13 @@
     stateVersion = 6;
   };
 
-  users.users.${username} = {
-    home = homeDirectory;
-    shell = pkgs.zsh;
+  users = {
+    knownUsers = [ username ];
+    users.${username} = {
+      uid = 501;
+      home = homeDirectory;
+      shell = pkgs.zsh;
+    };
   };
 
   programs.zsh.enable = true;

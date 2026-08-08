@@ -19,7 +19,7 @@
       "magicmark/tap/spacelist"
     ];
     casks = [
-      "aerospace"
+      "nikitabobko/tap/aerospace"
       "ghostty"
     ];
     onActivation = {

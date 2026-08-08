@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILLS_MANIFEST="$SCRIPT_DIR/skills.tsv"
+
+log() {
+  printf '[tools] %s\n' "$*"
+}
+
+die() {
+  printf '[tools] error: %s\n' "$*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 ||
+    die "$1 is unavailable; apply the Nix configuration first"
+}
+
+install_runtimes() {
+  log "installing configured mise runtimes"
+  MISE_YES=1 mise install node@lts go@latest rust@stable
+}
+
+install_pi() {
+  log "installing/upgrading Pi with mise-managed Node LTS"
+  mise exec node@lts -- \
+    npm install --global @earendil-works/pi-coding-agent
+}
+
+install_modal() {
+  log "installing uv-managed Python 3.13"
+  uv python install 3.13
+  log "installing/upgrading Modal with uv-managed Python 3.13"
+  uv tool install --upgrade --python 3.13 --managed-python modal@latest
+}
+
+install_skills() {
+  local source skill extra
+  [[ -r "$SKILLS_MANIFEST" ]] ||
+    die "skills manifest is missing: $SKILLS_MANIFEST"
+
+  while IFS=$'\t' read -r source skill extra; do
+    [[ -n "$source" ]] || continue
+    case "$source" in \#*) continue ;; esac
+    [[ -n "$skill" && -z "$extra" ]] ||
+      die "invalid skills manifest line for source: $source"
+    log "installing agent skill $skill"
+    (
+      cd "$HOME"
+      mise exec node@lts -- \
+        npx --yes skills add "$source" --skill "$skill" --yes
+    )
+  done < "$SKILLS_MANIFEST"
+}
+
+modal_is_configured() {
+  [[ -f "$HOME/.modal.toml" ]] && return 0
+  [[ -n "${MODAL_TOKEN_ID:-}" && -n "${MODAL_TOKEN_SECRET:-}" ]]
+}
+
+check_modal_auth() {
+  local modal_bin
+  modal_is_configured || {
+    log "Modal is not authenticated; skipping the read-only health check"
+    return
+  }
+
+  modal_bin="$(uv tool dir --bin)/modal"
+  [[ -x "$modal_bin" ]] || die "uv installed Modal but its executable is missing"
+  log "checking existing Modal authentication (no credentials are printed)"
+  "$modal_bin" environment list >/dev/null
+  log "Modal authentication is healthy"
+}
+
+main() {
+  require_command mise
+  require_command uv
+  install_runtimes
+  install_pi
+  install_modal
+  install_skills
+  check_modal_auth
+  log "complete"
+}
+
+main "$@"

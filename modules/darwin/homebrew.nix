@@ -11,7 +11,15 @@
 
   homebrew = {
     enable = true;
+    taps = [
+      "magicmark/tap"
+      "nikitabobko/tap"
+    ];
+    brews = [
+      "magicmark/tap/spacelist"
+    ];
     casks = [
+      "aerospace"
       "ghostty"
     ];
     onActivation = {

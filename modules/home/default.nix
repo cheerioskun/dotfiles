@@ -16,6 +16,7 @@
     ./terminal.nix
     ./tmux.nix
     ./vcs.nix
+    ./window-manager.nix
   ];
 
   home = {

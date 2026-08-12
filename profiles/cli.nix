@@ -11,8 +11,9 @@
       jq
       less
       lf
-      libpq
+      postgresql
       ripgrep
+      rustup
       trash-cli
       unzip
       uv

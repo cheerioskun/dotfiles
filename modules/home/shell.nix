@@ -43,6 +43,7 @@
       gaa = "git add --all";
       gc = "git commit";
       gca = "git commit --amend";
+      gcl = "git clone";
       gcmsg = "git commit --message";
       gcm = "git checkout main";
       gco = "git checkout";

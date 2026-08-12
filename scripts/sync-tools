@@ -21,6 +21,7 @@ require_command() {
 install_runtimes() {
   log "installing configured mise runtimes"
   MISE_YES=1 mise install node@lts go@latest rust@stable
+  mise exec rust@stable -- rustup component add rust-analyzer
 }
 
 install_pi() {

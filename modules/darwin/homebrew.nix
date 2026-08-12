@@ -16,11 +16,14 @@
       "nikitabobko/tap"
     ];
     brews = [
+      "gcc"
+      "iproute2mac"
       "magicmark/tap/spacelist"
     ];
     casks = [
       "nikitabobko/tap/aerospace"
       "ghostty"
+      "sublime-text"
     ];
     onActivation = {
       autoUpdate = false;

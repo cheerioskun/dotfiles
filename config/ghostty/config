@@ -1,0 +1,33 @@
+# Ghostty — quiet defaults, native ergonomics, no generated noise.
+theme = light:catppuccin-latte,dark:catppuccin-mocha
+
+font-family = "JetBrainsMono Nerd Font"
+font-size = 14
+font-feature = -calt
+
+window-padding-x = 14
+window-padding-y = 10
+window-padding-balance = true
+window-inherit-working-directory = true
+split-inherit-working-directory = true
+tab-inherit-working-directory = true
+
+window-decoration = auto
+macos-titlebar-style = transparent
+background-opacity = 0.96
+background-blur = true
+unfocused-split-opacity = 0.78
+
+shell-integration = zsh
+shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo,path
+copy-on-select = clipboard
+mouse-hide-while-typing = true
+scrollback-limit = 100000
+cursor-style = bar
+cursor-style-blink = false
+
+quick-terminal-position = top
+quick-terminal-size = 45%,100%
+quick-terminal-autohide = true
+quick-terminal-animation-duration = 0.15
+keybind = global:cmd+alt+space=toggle_quick_terminal

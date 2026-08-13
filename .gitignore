@@ -1,1 +1,11 @@
 install.out
+.DS_Store
+.direnv/
+.env
+.env.*
+!.env.example
+result
+result-*
+tests/.artifacts/
+__pycache__/
+*.pyc

@@ -1,0 +1,55 @@
+name: Bootstrap validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  nix:
+    name: Nix closure (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu
+            os: ubuntu-24.04
+            target: .#checks.x86_64-linux.home
+          - name: macOS
+            os: macos-26
+            target: .#checks.aarch64-darwin.system
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Build the locked configuration
+        run: nix build "${{ matrix.target }}" --no-link --print-build-logs
+
+  shell:
+    name: Shell safety (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - macos-26
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run isolated smoke tests
+        run: bash tests/smoke.sh
+      - name: Run ShellCheck
+        run: |
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            if [[ "$RUNNER_OS" == "Linux" ]]; then
+              sudo apt-get update
+              sudo apt-get install -y shellcheck
+            else
+              brew install shellcheck
+            fi
+          fi
+          shellcheck bootstrap.sh scripts/sync-tools tests/*.sh tests/fixtures/bin/*

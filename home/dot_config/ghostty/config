@@ -5,8 +5,8 @@
 
 theme = light:catppuccin-latte,dark:catppuccin-mocha
 
-# Readable coding font. The macos-gui profile installs this Nerd Font so
-# Powerlevel10k and other prompt glyphs render consistently.
+# Readable coding font. Bootstrap installs it on macOS so Powerlevel10k and
+# other prompt glyphs render consistently.
 font-family = "JetBrainsMono Nerd Font"
 font-size = 14
 # Avoid ligatures in code, logs, diffs, and command output.

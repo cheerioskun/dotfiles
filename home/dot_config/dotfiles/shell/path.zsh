@@ -9,6 +9,7 @@ path_prepend_if_dir() {
 
 path_prepend_if_dir "$HOME/.local/bin"
 path_prepend_if_dir "$HOME/.cargo/bin"
+path_prepend_if_dir "${XDG_DATA_HOME:-$HOME/.local/share}/bob/nvim-bin"
 path_prepend_if_dir "$HOME/go/bin"
 
 export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"

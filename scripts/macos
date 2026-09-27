@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+brew install \
+  zsh tmux neovim fzf ripgrep bat fd lf zoxide jq direnv \
+  postgresql less unzip gh jj
+
+brew install --cask ghostty sublime-text font-jetbrains-mono-nerd-font
+
+zsh_path="$(command -v zsh)"
+if [[ "$SHELL" != "$zsh_path" ]]; then
+  grep -qxF "$zsh_path" /etc/shells || printf '%s\n' "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+  chsh -s "$zsh_path"
+fi

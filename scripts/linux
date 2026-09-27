@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sudo env DEBIAN_FRONTEND=noninteractive apt-get update
+sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  build-essential binutils bison bsdextrautils ca-certificates curl git \
+  zsh tmux neovim fzf ripgrep bat fd-find zoxide jq direnv \
+  postgresql-client less unzip gh
+
+mkdir -p "$HOME/.local/bin"
+[[ -e "$HOME/.local/bin/bat" ]] || ln -s "$(command -v batcat)" "$HOME/.local/bin/bat"
+[[ -e "$HOME/.local/bin/fd" ]] || ln -s "$(command -v fdfind)" "$HOME/.local/bin/fd"
+
+zsh_path="$(command -v zsh)"
+current_shell="$(getent passwd "$(id -un)" | cut -d: -f7)"
+if [[ "$current_shell" != "$zsh_path" ]]; then
+  sudo chsh -s "$zsh_path" "$(id -un)"
+fi

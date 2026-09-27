@@ -1,17 +1,6 @@
 # Dotfiles
 
-This repo exists to make a new machine feel like mine quickly: a fast zsh, quiet muscle-memory aliases, tmux that behaves predictably, fuzzy search everywhere, sane CLI defaults, and pi available as the agent interface.
-
-The north star is a declarative, cross-platform personal environment. Files are managed by chezmoi. `bootstrap.sh` is only the conventional entrypoint: it installs chezmoi if needed, applies this repo, and can install the current tool profiles.
-
-## Principles
-
-- **Config is precious; installers are disposable.** Dotfiles should describe the environment. Package installation is a helper, not the identity of the repo.
-- **Cross-platform by default.** macOS and Debian/Ubuntu-like Linux should share the same shell feel.
-- **Local escape hatches stay local.** Secrets, auth, session history, and machine-specific overrides are not tracked.
-- **One obvious entrypoint.** A fresh machine should start with `./bootstrap.sh`.
-
-## Bootstrap
+Personal shell and tool configuration, managed with chezmoi. Supports macOS and Debian/Ubuntu Linux without Nix.
 
 ```bash
 git clone <repo-url> ~/repos/dotfiles
@@ -19,19 +8,22 @@ cd ~/repos/dotfiles
 ./bootstrap.sh
 ```
 
-By default this applies the chezmoi-managed files and installs the `core,dev,ai` profiles. Override with:
+Bootstrap installs the system packages, applies `home/`, and sets up:
 
-```bash
-DOTFILES_PROFILES=core ./bootstrap.sh
-DOTFILES_PROFILES=core,dev,ai,macos-gui ./bootstrap.sh
-DOTFILES_SKIP_PACKAGES=1 ./bootstrap.sh
-DOTFILES_SKIP_SKILLS=1 ./bootstrap.sh
+- zsh, tmux, fzf, ripgrep, fd, bat, lf, zoxide, jq, direnv, jj, and PostgreSQL's CLI
+- stable Neovim through Bob, with a focused Lazy.nvim plugin set
+- Node LTS through NVM
+- Go 1.26.8 through GVM
+- stable Rust through rustup
+- Ghostty, Sublime Text, and JetBrains Mono Nerd Font on macOS
+
+It is safe to run again. Machine-specific shell configuration belongs in `~/.zshrc.local`.
+
+## Layout
+
+```text
+bootstrap.sh    shared setup and language managers
+scripts/linux   apt packages and Linux shell setup
+scripts/macos   Homebrew packages and macOS shell setup
+home/           chezmoi source
 ```
-
-Local machine overrides belong in `~/.zshrc.local`.
-
-Tracked pi config includes settings and global extensions. Pi auth and sessions are intentionally not managed.
-
-The `ai` profile installs agent skills during bootstrap instead of vendoring them in chezmoi. Add preferred `skills add` argument lines to `scripts/install-skills`; bootstrap runs them from `$HOME` and appends `--yes`.
-
-Tracked Sublime Text config lives under `home/Library/Application Support/Sublime Text/Packages/User/`. The `macos-gui` profile installs Sublime Text, Ghostty, and JetBrainsMono Nerd Font, while the `dev` profile ensures Rust analyzer is available for the Sublime LSP setup. Ghostty uses the tracked Catppuccin themes and keyboard-first config under `home/dot_config/ghostty/`.

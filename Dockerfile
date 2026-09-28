@@ -20,23 +20,27 @@ RUN groupadd --gid "${GID}" "${USERNAME}" \
     && printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${USERNAME}" > "/etc/sudoers.d/${USERNAME}" \
     && chmod 0440 "/etc/sudoers.d/${USERNAME}"
 
-COPY --chown=${UID}:${GID} . "${HOME}/dotfiles"
-
 USER ${USERNAME}
 WORKDIR ${HOME}/dotfiles
 
-RUN ./bootstrap.sh
+# Only installer changes invalidate the expensive toolchain layer.
+COPY --chown=${UID}:${GID} bootstrap.sh ./bootstrap.sh
+COPY --chown=${UID}:${GID} scripts/linux ./scripts/linux
+RUN DOTFILES_SKIP_CONFIGS=1 ./bootstrap.sh
 
 # Use Bob's current Neovim even outside interactive zsh (e.g. docker exec).
 ENV PATH="${HOME}/.local/share/bob/nvim-bin:${HOME}/.local/bin:${PATH}"
 
-# Materialize editor and tmux plugins so the built image is ready on first use.
-RUN zsh -lic 'nvim --headless "+Lazy! sync" +qa' \
-    && tmux new-session -d -s plugin-install \
+RUN sudo mkdir -p /workspace && sudo chown "${USERNAME}:${USERNAME}" /workspace
+
+# Config-only edits reuse the installed system packages and language toolchains.
+COPY --chown=${UID}:${GID} home/ ./home/
+RUN chezmoi apply --source "${HOME}/dotfiles/home"
+
+# Neovim installs its plugins on first launch; only preinstall tmux plugins.
+RUN tmux new-session -d -s plugin-install \
     && "${HOME}/.tmux/plugins/tpm/bin/install_plugins" \
     && tmux kill-server
-
-RUN sudo mkdir -p /workspace && sudo chown "${USERNAME}:${USERNAME}" /workspace
 
 ENV USER=${USERNAME} SHELL=/usr/bin/zsh
 WORKDIR /workspace

@@ -11,7 +11,7 @@ fi
 
 brew install \
   zsh tmux neovim fzf ripgrep bat fd lf zoxide jq direnv starship \
-  postgresql less unzip gh jj
+  postgresql less unzip gh jj tree-sitter-cli
 
 brew install --cask ghostty sublime-text font-jetbrains-mono-nerd-font
 

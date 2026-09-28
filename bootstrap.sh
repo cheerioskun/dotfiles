@@ -24,8 +24,11 @@ if ! command -v chezmoi >/dev/null 2>&1; then
   sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
 fi
 
-log "applying configs"
-chezmoi apply --source "$DOTFILES_DIR/home"
+# Docker installs tools in a cached layer before copying the configs.
+if [[ "${DOTFILES_SKIP_CONFIGS:-0}" != 1 ]]; then
+  log "applying configs"
+  chezmoi apply --source "$DOTFILES_DIR/home"
+fi
 
 if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
   log "installing zinit"
@@ -90,15 +93,21 @@ if ! command -v lf >/dev/null 2>&1; then
   log "installing lf"
   go install github.com/gokcehan/lf@latest
 fi
-if ! command -v jj >/dev/null 2>&1; then
+if ! command -v jj >/dev/null 2>&1 || ! command -v tree-sitter >/dev/null 2>&1; then
   if ! command -v cargo-binstall >/dev/null 2>&1; then
     log "installing cargo-binstall"
     curl --proto '=https' --tlsv1.2 -sSfL \
       https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh |
       bash
   fi
+fi
+if ! command -v jj >/dev/null 2>&1; then
   log "installing jj"
   cargo binstall --no-confirm --locked jj-cli
+fi
+if ! command -v tree-sitter >/dev/null 2>&1; then
+  log "installing tree-sitter CLI for Neovim parsers"
+  cargo binstall --no-confirm --locked tree-sitter-cli
 fi
 
 log "done"

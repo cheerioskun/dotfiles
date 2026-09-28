@@ -3,13 +3,6 @@ ZINIT_HOME="${HOME}/.local/share/zinit/zinit.git"
 if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
   source "$ZINIT_HOME/zinit.zsh"
 
-  zinit ice depth=1
-  zinit light romkatv/powerlevel10k
-
-  zstyle ':catppuccin:p10k' theme lean
-  zstyle ':catppuccin:p10k' flavour mocha
-  zinit light tolkonepiu/catppuccin-powerlevel10k-themes
-
   zinit wait lucid for \
     OMZL::git.zsh \
     OMZP::git \

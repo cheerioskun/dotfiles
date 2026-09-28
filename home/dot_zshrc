@@ -1,10 +1,5 @@
 # chezmoi-managed zshrc
 
-# Powerlevel10k instant prompt. Keep near the top.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 export DOTFILES_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
 
 source_if_exists() {
@@ -27,5 +22,8 @@ else
   export VISUAL=vim
 fi
 
-[[ ! -f "$HOME/.p10k.zsh" ]] || source "$HOME/.p10k.zsh"
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+
 [[ ! -f "$HOME/.zshrc.local" ]] || source "$HOME/.zshrc.local"

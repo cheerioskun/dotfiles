@@ -1,21 +1,70 @@
 return {
+  -- A small set of genuinely different palettes. <leader>uC previews and
+  -- persists a choice instead of rolling the dice on every startup.
+  {
+    "folke/tokyonight.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = { style = "moon" },
+  },
+  {
+    "rebelot/kanagawa.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = { theme = "wave", background = { dark = "wave" } },
+  },
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    priority = 1000,
+    lazy = false,
+    opts = { variant = "moon" },
+  },
   {
     "catppuccin/nvim",
     name = "catppuccin",
     priority = 1000,
     lazy = false,
     opts = {
-      flavour = "mocha",
+      flavour = "macchiato",
       integrations = {
         gitsigns = true,
-        telescope = { enabled = true },
         which_key = true,
       },
     },
-    config = function(_, opts)
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin")
-    end,
+  },
+
+  {
+    "folke/snacks.nvim",
+    priority = 900,
+    lazy = false,
+    opts = {
+      terminal = { win = { position = "float", border = "rounded" } },
+      input = { enabled = true },
+      picker = { enabled = true },
+      notifier = { enabled = true, timeout = 2500 },
+      dashboard = {
+        enabled = true,
+        preset = {
+          header = "NEOVIM",
+          keys = {
+            { icon = " ", key = "f", desc = "Find file", action = ":lua Snacks.picker.files()" },
+            { icon = " ", key = "g", desc = "Find text", action = ":lua Snacks.picker.grep()" },
+            { icon = " ", key = "r", desc = "Recent files", action = ":lua Snacks.picker.recent()" },
+            { icon = " ", key = "n", desc = "New file", action = ":ene | startinsert" },
+            { icon = "󰏘 ", key = "t", desc = "Pick theme", action = ":lua require('theme').pick()" },
+            { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
+            { icon = " ", key = "q", desc = "Quit", action = ":qa" },
+          },
+        },
+        sections = {
+          { section = "header" },
+          { icon = " ", title = "Actions", section = "keys", gap = 1, padding = 1 },
+          { icon = " ", title = "Recent files", section = "recent_files", indent = 2, padding = 1 },
+          { section = "startup" },
+        },
+      },
+    },
   },
 
   {
@@ -27,6 +76,8 @@ return {
       ensure_installed = {
         "bash",
         "c",
+        "cpp",
+        "cmake",
         "go",
         "javascript",
         "json",
@@ -47,28 +98,6 @@ return {
     config = function(_, opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
-  },
-
-  {
-    "nvim-telescope/telescope.nvim",
-    cmd = "Telescope",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files" },
-      { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep" },
-      { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find buffers" },
-      { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Find help" },
-      { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent files" },
-      { "<leader>fs", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document symbols" },
-      { "<leader>gs", "<cmd>Telescope git_status<cr>", desc = "Git status" },
-    },
-    opts = {
-      defaults = {
-        layout_strategy = "horizontal",
-        layout_config = { prompt_position = "top" },
-        sorting_strategy = "ascending",
-      },
-    },
   },
 
   {
@@ -112,7 +141,7 @@ return {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
     opts = {
-      current_line_blame = true,
+      current_line_blame = false,
       current_line_blame_opts = { delay = 500 },
       on_attach = function(bufnr)
         local gs = require("gitsigns")
@@ -121,6 +150,7 @@ return {
         end
         bmap("]h", gs.next_hunk, "Next Git hunk")
         bmap("[h", gs.prev_hunk, "Previous Git hunk")
+        bmap("<leader>hb", gs.toggle_current_line_blame, "Toggle Git blame")
         bmap("<leader>hp", gs.preview_hunk, "Preview Git hunk")
         bmap("<leader>hs", gs.stage_hunk, "Stage Git hunk")
         bmap("<leader>hr", gs.reset_hunk, "Reset Git hunk")
@@ -136,9 +166,12 @@ return {
       local wk = require("which-key")
       wk.setup(opts)
       wk.add({
+        { "<leader>c", group = "code" },
         { "<leader>f", group = "find" },
         { "<leader>g", group = "git" },
         { "<leader>h", group = "hunk" },
+        { "<leader>u", group = "ui" },
+        { "<leader>t", group = "terminal" },
       })
     end,
   },
@@ -149,17 +182,29 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
       options = {
-        theme = "catppuccin",
+        theme = "auto",
         globalstatus = true,
-        component_separators = "",
-        section_separators = "",
+        component_separators = { left = "│", right = "│" },
+        section_separators = { left = "", right = "" },
       },
     },
   },
 
   {
-    "numToStr/Comment.nvim",
-    event = "VeryLazy",
-    opts = {},
+    "stevearc/conform.nvim",
+    cmd = "ConformInfo",
+    keys = {
+      {
+        "<leader>cf",
+        function()
+          require("conform").format({ async = true, lsp_format = "fallback" })
+        end,
+        mode = { "n", "v" },
+        desc = "Format code",
+      },
+    },
+    opts = {
+      formatters_by_ft = { c = { "clang_format" }, cpp = { "clang_format" } },
+    },
   },
 }

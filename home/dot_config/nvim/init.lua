@@ -19,6 +19,9 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup("plugins", {
   change_detection = { notify = false },
-  install = { colorscheme = { "catppuccin" } },
+  install = { colorscheme = { "tokyonight-moon" } },
   ui = { border = "rounded" },
 })
+
+require("theme").setup()
+require("lsp")

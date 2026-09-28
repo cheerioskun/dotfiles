@@ -25,6 +25,9 @@ opt.tabstop = 2
 opt.smartindent = true
 opt.list = true
 opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
+opt.fillchars = { eob = " ", fold = " ", foldopen = "", foldclose = "", diff = "╱" }
+opt.pumblend = 8
+opt.winblend = 0
 
 vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "Highlight yanked text",
